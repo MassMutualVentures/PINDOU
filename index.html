@@ -1,144 +1,238 @@
-<!DOCTYPE html>
-<html lang="ko">
+<!doctype html>
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>존 리와 함께하는 무료 투자 클래스</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Noto Sans KR', sans-serif;
-            background-color: #f4f7fa;
-            margin: 0;
-            padding-bottom: 80px;
-        }
-        header {
-            text-align: center;
-            background-color: #203864;
-            padding: 10px 0;
-        }
-        header img {
-            width: 100%;
-            max-width: 800px;
-            height: auto;
-            object-fit: cover;
-            margin: auto;
-            display: block;
-        }
-        .container {
-            max-width: 800px;
-            margin: auto;
-            background-color: white;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .cta-button {
-            display: inline-block;
-            background-color: #d72631;
-            color: white;
-            padding: 15px 30px;
-            text-decoration: none;
-            font-size: 20px;
-            border-radius: 5px;
-            margin-top: 20px;
-        }
-        h2 {
-            color: #203864;
-        }
-        ul {
-            font-size: 18px;
-            line-height: 1.6;
-        }
-        .testimonial {
-            background-color: #f0f5ff;
-            padding: 15px;
-            border-left: 5px solid #203864;
-            margin-bottom: 15px;
-            font-style: italic;
-        }
-        .floating-cta {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: #203864;
-            padding: 15px;
-            text-align: center;
-            box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
-        }
-        .floating-cta a {
-            color: white;
-            font-size: 22px;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        footer {
-            text-align: center;
-            padding: 20px;
-            color: #777;
-            font-size: 14px;
-        }
-        .performance-img {
-            width: 100%;
-            height: auto;
-            margin-top: 20px;
-            border: 2px solid #203864;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>拼豆精灵 | 你的第一张原创拼豆图纸</title>
+  <meta name="description" content="拼豆精灵是一款把空白画布、AI 共创、图纸社区、智能拼豆板和材料清单连接起来的拼豆创作平台。">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+  <script src="app.js" defer></script>
 </head>
 <body>
+  <div class="loader" id="loader" aria-hidden="true">
+    <div class="loader-sprite" id="loaderSprite"></div>
+    <p>One moment please...</p>
+  </div>
 
-<header>
-    <!-- 수정된 메인 이미지 -->
-    <img src="3.png" alt="메인 이미지">
-</header>
+  <div class="progress-bar" aria-hidden="true"></div>
 
-<div class="container">
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="拼豆精灵">
+      <span class="brand-mark">●</span>
+      <span>BEAD SPRITE</span>
+    </a>
+    <nav class="nav-links" aria-label="官网导航">
+      <a href="#spirit">精灵</a>
+      <a href="#studio">创作</a>
+      <a href="#memory">记忆</a>
+      <a href="#board">智能板</a>
+      <a href="#launch">MVP</a>
+    </nav>
+    <a class="nav-cta" href="#launch">加入内测</a>
+  </header>
 
-    <section>
-        <h2>이런 고민 하고 계시나요?</h2>
-        <ul>
-            <li>경제 뉴스가 복잡하고 이해하기 어렵다.</li>
-            <li>믿을 수 있는 투자 정보가 부족하다.</li>
-            <li>주식 투자로 자주 손실을 봤다.</li>
-            <li>매번 좋은 투자 기회를 놓친다.</li>
-            <li>어디서부터 어떻게 투자해야 할지 막막하다.</li>
-        </ul>
+  <main id="top">
+    <section class="hero">
+      <div class="bead-noise" aria-hidden="true"></div>
+      <div class="hero-shell">
+        <div class="event-card">
+          <div class="event-top">
+            <strong>SPRITE'26</strong>
+            <button type="button" aria-label="关闭装饰卡片">×</button>
+          </div>
+          <div class="event-art">
+            <div class="pixel-map" aria-hidden="true">
+              <span class="b p1"></span><span class="b p2"></span><span class="b p3"></span>
+              <span class="b p4"></span><span class="b p5"></span><span class="b p6"></span>
+              <span class="b p7"></span><span class="b p8"></span><span class="b p9"></span>
+            </div>
+            <div class="hero-sprite" id="heroSprite" aria-label="拼豆精灵像素形象"></div>
+          </div>
+          <div class="event-meta">
+            <span>FIRST MISSION</span>
+            <i></i>
+            <span>DESIGN YOUR SPRITE</span>
+          </div>
+        </div>
+
+        <div class="hero-copy-wrap">
+          <p class="eyebrow">拼豆精灵 = 用户养成的、由像素豆子构成的虚拟伙伴</p>
+          <h1>先养成一个精灵，再开始你的拼豆宇宙。</h1>
+          <p class="hero-copy">新用户的第一个任务不是上传照片，而是在空白画布上拼出自己的精灵。精灵本身就是一张原创图纸，它会陪你生成、编辑、制作、分享，并随着创作成长。</p>
+          <div class="hero-actions">
+            <a class="button primary" href="#spirit"><i data-lucide="sparkles"></i>看精灵机制</a>
+            <a class="button ghost" href="#studio"><i data-lucide="paintbrush"></i>看创作流程</a>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section>
-        <h2>존 리의 투자 솔루션</h2>
-        <p style='font-size:20px; color:#d72631; font-weight:bold;'>
-        지금 바로 참여하시면, 더 이상 투자로 고민할 일이 없을 것입니다!
-        </p>
-        <ul>
-            <li>매일 아침 엄선한 추천 종목 제공</li>
-            <li>초보자도 쉽게 이해할 수 있는 종목별 상세 해설</li>
-            <li>정기적 온라인 무료 투자 강좌</li>
-            <li>카카오톡 전용 채팅방을 통한 실시간 질의응답</li>
-            <li>매월 시장 전망과 투자 전략 특별 세미나 제공</li>
-        </ul>
-        <!-- 최근 추천 종목의 수익 이미지 -->
-        <img src="20250402_디젠스_113810.png" alt="추천 종목 성과" class="performance-img">
-        <img src="2.jpg" alt="추천 종목 성과" class="performance-img">
+    <section class="ticker" aria-label="核心定位">
+      <div class="ticker-track">
+        <span>ORIGINAL FIRST</span>
+        <span>BEAD PARTICLES</span>
+        <span>AI CO-CREATION</span>
+        <span>HEALING COMPANION</span>
+        <span>SMART BOARD READY</span>
+        <span>UGC CHALLENGE</span>
+      </div>
     </section>
 
-    <section>
-        <h2>회원들의 실제 후기</h2>
-        <div class="testimonial">"존 리 추천 종목으로 한 달 만에 손실을 만회했습니다!" - 김민수 (55세, 서울)</div>
-        <div class="testimonial">"쉽고 정확한 정보 덕분에 이제 주식 투자에 자신감이 생겼습니다." - 이영자 (62세, 부산)</div>
-        <div class="testimonial">"무료 강좌 덕분에 주식 보는 눈이 완전히 달라졌어요!" - 박상호 (58세, 인천)</div>
+    <section class="section spirit-section" id="spirit">
+      <div class="section-head">
+        <p class="kicker">01 / Sprite system</p>
+        <h2>精灵不是小游戏，是核心创作机制本身。</h2>
+      </div>
+      <div class="spirit-grid">
+        <article class="sprite-card big">
+          <div class="card-label">FIRST TASK</div>
+          <h3>空白画布设计精灵</h3>
+          <p>新手从基础骨架开始改色、换表情、加配饰，第一张图纸 100% 原创，也天然规避版权风险。</p>
+          <div class="mini-canvas">
+            <div class="canvas-grid" id="canvasSprite"></div>
+          </div>
+        </article>
+        <article class="sprite-card">
+          <div class="card-label">GROW</div>
+          <h3>随创作成长</h3>
+          <p>完成图纸、打卡、参加挑战会解锁姿态、场景和配饰，但走治愈路线，不做焦虑式催促。</p>
+        </article>
+        <article class="sprite-card">
+          <div class="card-label">ASSIST</div>
+          <h3>嵌入每个流程</h3>
+          <p>上传时它观察，生成时它思考，编辑时给建议，完成时庆祝。陪伴感进入工具链路。</p>
+        </article>
+        <article class="sprite-card dark">
+          <div class="card-label">SHARE</div>
+          <h3>分享自带识别点</h3>
+          <p>晒图时带上自己的精灵形象，平台逐渐沉淀原创 IP，而不是只搬运外部 IP。</p>
+        </article>
+      </div>
     </section>
 
-</div>
+    <section class="section studio-section" id="studio">
+      <div class="section-head">
+        <p class="kicker">02 / Studio</p>
+        <h2>从“图转图”升级到“万物转图纸”。</h2>
+      </div>
+      <div class="studio-layout">
+        <div class="input-stack">
+          <div class="input-chip active"><i data-lucide="type"></i><span>文字描述生成</span><em>戴墨镜的橘猫，赛博朋克风</em></div>
+          <div class="input-chip"><i data-lucide="images"></i><span>多图融合</span><em>我 + 宠物 + 风格参考</em></div>
+          <div class="input-chip"><i data-lucide="sliders-horizontal"></i><span>指令式定制</span><em>颜色少一点，更适合新手</em></div>
+          <div class="input-chip"><i data-lucide="grid-3x3"></i><span>空白画布</span><em>从零拼出原创精灵</em></div>
+        </div>
+        <div class="studio-phone">
+          <img src="assets/pindou_ui_03_editor.png" alt="拼豆编辑器 UI">
+        </div>
+        <div class="rule-panel">
+          <h3>拼豆专属规则层</h3>
+          <ul>
+            <li>颜色数量约束</li>
+            <li>像素网格规则</li>
+            <li>可制作性校验</li>
+            <li>材料清单同步</li>
+          </ul>
+          <p>壁垒不在通用生成模型，而在模型是否真的懂拼豆。</p>
+        </div>
+      </div>
+    </section>
 
-<div class="floating-cta">
-    <a href="https://your-chat-room-link">👉 지금 무료로 카카오톡 채팅방 참여하기 👈</a>
-</div>
+    <section class="section memory-section" id="memory">
+      <div class="section-head">
+        <p class="kicker">03 / Long memory</p>
+        <h2>把推荐算法包装成“懂你的伙伴”。</h2>
+      </div>
+      <div class="memory-board">
+        <div class="memory-card">
+          <span>记住题材</span>
+          <strong>宠物、情侣、节日、国风</strong>
+        </div>
+        <div class="memory-card">
+          <span>记住审美</span>
+          <strong>常用色系、难度、尺寸</strong>
+        </div>
+        <div class="memory-card">
+          <span>给出建议</span>
+          <strong>“你上次很喜欢治愈系猫咪。”</strong>
+        </div>
+        <div class="memory-card glow">
+          <span>情绪价值</span>
+          <strong>陪伴，不催促；鼓励，不焦虑。</strong>
+        </div>
+      </div>
+    </section>
 
-<footer>
-    © 2025 존 리 투자클래스. All rights reserved.
-</footer>
+    <section class="section challenge-section">
+      <div class="section-head">
+        <p class="kicker">04 / UGC co-create</p>
+        <h2>比晒成品更容易裂变的是接龙共创。</h2>
+      </div>
+      <div class="challenge-grid">
+        <article>
+          <div class="pixel-badge">A</div>
+          <h3>接力拼图</h3>
+          <p>一张大图拆成多个区块，邀请好友或社群成员分别完成，最后合成完整作品。</p>
+        </article>
+        <article>
+          <div class="pixel-badge">B</div>
+          <h3>同图二创挑战</h3>
+          <p>同一底图，不同用户做不同配色，形成“一题多解”的内容池。</p>
+        </article>
+        <article>
+          <div class="pixel-badge">C</div>
+          <h3>精灵带图出圈</h3>
+          <p>分享时带上自己的精灵，让每张作品都有平台识别点。</p>
+        </article>
+      </div>
+    </section>
 
+    <section class="section board-section" id="board">
+      <div class="section-head">
+        <p class="kicker">05 / Smart board</p>
+        <h2>图纸、精灵和智能拼豆板天然联动。</h2>
+      </div>
+      <div class="board-layout">
+        <div class="board-copy">
+          <div class="board-step active"><span>连接</span><p>APP 同步图纸、精灵状态和制作步骤。</p></div>
+          <div class="board-step"><span>引导</span><p>板子按颜色或区域发光，新手不用一直数格子。</p></div>
+          <div class="board-step"><span>庆祝</span><p>完成作品后精灵反馈，用户自然进入晒图和材料复购。</p></div>
+        </div>
+        <figure class="board-visual">
+          <img src="assets/pindou_ui_imagegen_1.png" alt="智能拼豆板与 APP 联动示例">
+        </figure>
+      </div>
+    </section>
+
+    <section class="section launch-section" id="launch">
+      <div class="section-head">
+        <p class="kicker">06 / MVP scope</p>
+        <h2>第一版做小，但把“精灵”做深。</h2>
+      </div>
+      <div class="launch-grid">
+        <article>
+          <span>必须做</span>
+          <h3>自定义精灵外形</h3>
+          <p>基础骨架、改色、表情、保存为第一张原创图纸。</p>
+        </article>
+        <article>
+          <span>必须做</span>
+          <h3>基础成长等级</h3>
+          <p>完成图纸和创作行为带来轻量成长，不做重运营。</p>
+        </article>
+        <article>
+          <span>必须做</span>
+          <h3>关键节点反馈</h3>
+          <p>生成、编辑、完成时出现精灵反馈，增强陪伴感。</p>
+        </article>
+        <article>
+          <span>先留接口</span>
+          <h3>多模态与共创</h3>
+          <p>文字、多图、接力拼图、二创挑战先预留数据结构。</p>
+        </article>
+      </div>
+    </section>
+  </main>
 </body>
 </html>
