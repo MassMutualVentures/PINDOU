@@ -1,53 +1,118 @@
-# HangI0 服装展示网站
+# HangI0 女装展示网站
 
-这是一个适合 GitHub Pages 部署的服装展示网站原型，包含：
+一个纯静态（HTML/CSS/JS）+ Supabase 的女装展示站：前台看款、心愿收藏、穿搭整套介绍、一键分享；后台可增删改所有商品、穿搭、店铺联系方式与配色主题。无需服务器，可部署到 GitHub Pages。
 
-- 电脑端和手机端响应式展示页
-- 新款、分类筛选、搜索、款式详情弹窗
-- 店主后台页面
-- Supabase 数据库和图片存储接入位
+---
 
-## 直接预览
+## 一、文件说明（都要上传）
 
-打开 `index.html` 即可看展示页，打开 `admin.html` 可看店主后台。
+| 文件 | 作用 |
+|---|---|
+| `index.html` | 展示页（首页） |
+| `styles.css` | 展示页样式 + 8 套季节配色主题 |
+| `app.js` | 展示页逻辑（商品/穿搭/心愿单/分享/联系） |
+| `admin.html` | 店主后台页面 |
+| `admin.css` | 后台样式 |
+| `admin.js` | 后台逻辑（增删改、设置、上传压缩） |
+| `config.js` | **连接配置**（Supabase 地址与密钥），必须上传 |
+| `config.example.js` | 配置模板（参考用） |
+| `fonts/` | 自托管字体（Fraunces 英文标题体），**须一并上传**，否则英文标题/logo 变回普通衬线 |
+| `supabase.sql` | 数据库建表 + 权限脚本（在 Supabase 里运行一次） |
+| `README.md` | 本说明 |
 
-未配置 Supabase 时，后台新增款式只会保存在当前浏览器本机，适合演示和确认样式。
+> `config.js` 里的 anon key 是「公开可用」密钥，允许出现在前端；真正的安全由数据库 RLS 策略 + 只创建店主一个账号来保证。
 
-## GitHub Pages 部署
+---
 
-1. 把 `fashion-showcase` 文件夹提交到 GitHub 仓库。
-2. 在仓库设置里进入 `Pages`。
-3. Source 选择部署分支，目录选择包含这些文件的目录。
-4. 发布后访问 GitHub Pages 给出的地址。
+## 二、本地预览
 
-## 开通真实后台上传
+直接双击打开 `index.html` 即可看展示页，打开 `admin.html` 看后台。
+未配置 Supabase 时，后台改动只存在本机浏览器（演示用）。要真正上线、多设备同步，按下面配置 Supabase。
 
-GitHub Pages 本身只能托管静态页面，不能运行后台服务。要实现店主登录、上传图片、更新款式，建议使用 Supabase：
+---
 
-1. 创建 Supabase 项目。
-2. 在 SQL Editor 执行 `supabase.sql`。
-3. 在 Authentication 里创建店主邮箱账号。
-4. 打开 `config.js`，填写：
+## 三、首次部署（完整步骤）
 
-```js
-window.BOUTIQUE_CONFIG = {
-  SUPABASE_URL: "你的 Supabase Project URL",
-  SUPABASE_ANON_KEY: "你的 Supabase anon public key",
-  STORAGE_BUCKET: "product-images"
-};
-```
+### 第 1 步：创建 Supabase 项目
+1. 打开 https://supabase.com ，注册并登录。
+2. 点 **New project**，填项目名，设一个数据库密码，**Region 选离顾客近的**（中国/东亚可选 Singapore 或 Tokyo）。
+3. 等项目初始化完成（约 1–2 分钟）。
 
-5. 重新部署到 GitHub Pages。
+### 第 2 步：运行数据库脚本
+1. 左侧进入 **SQL Editor** → **New query**。
+2. 把 `supabase.sql` **整个文件内容**粘贴进去，点 **Run**。
+3. 看到「Success」即可。它会自动创建：
+   - 数据表：`products`（商品）、`site_settings`（店铺设置）、`outfits`（穿搭）
+   - 全部读写权限策略（公开可读、仅登录店主可写）
+   - 图片存储桶 `product-images`（公开读）
+   > 这个脚本可以**重复运行**，不会报错、也不会删数据。
 
-说明：示例 SQL 默认所有已登录用户都能管理产品。正式使用时，建议只创建店主账号，或进一步把策略限制为指定店主用户 ID。
+### 第 3 步：创建店主账号
+1. 左侧进入 **Authentication** → **Users** → **Add user** → **Create new user**。
+2. 填店主邮箱 + 密码，勾选 **Auto Confirm User**（免邮箱验证）。
+3. **只创建这一个账号**（策略允许任何已登录用户管理数据，多建账号 = 多个人能改你的商品）。
 
-## 替换店铺信息
+### 第 4 步：填写连接配置
+1. Supabase 左下 **Project Settings** → **API**，复制两项：
+   - **Project URL**
+   - **Project API keys** 里的 **anon public**
+2. 打开 `config.js`，填进去（STORAGE_BUCKET 保持 `product-images`）：
+   ```js
+   window.BOUTIQUE_CONFIG = {
+     SUPABASE_URL: "你的 Project URL",
+     SUPABASE_ANON_KEY: "你的 anon public key",
+     STORAGE_BUCKET: "product-images"
+   };
+   ```
 
-常改内容在 `index.html`：
+### 第 5 步：上传到 GitHub Pages
+1. 在 GitHub 新建一个仓库（Public）。
+2. 把本目录**所有文件**上传到仓库**根目录**（index.html 要在根，不要放进子文件夹）。
+3. 仓库 **Settings** → **Pages** → Source 选 **Deploy from a branch** → Branch 选 `main`（或 `master`）、目录选 `/ (root)` → **Save**。
+4. 等 1 分钟，页面给出网址：
+   - 展示页：`https://你的用户名.github.io/仓库名/`
+   - 后台：`https://你的用户名.github.io/仓库名/admin.html`
 
-- 品牌名：`HangI0`
-- 电话、邮箱、地址、微信说明
-- 首屏大图和搭配图片
-- 页面文案
+### 第 6 步：验证
+1. 打开展示页，能看到页面。
+2. 打开 `admin.html`，用第 3 步的邮箱密码登录。
+3. 在后台「店铺联系方式与信息」填电话、微信并保存。
+4. 添加一个款式（上传封面 + 上身图 + 尺码库存），回展示页刷新，应能看到。
 
-展示页视觉在 `styles.css`，产品展示逻辑在 `app.js`；后台 `admin.html` 使用独立的 `admin.css`，逻辑在 `admin.js`。
+---
+
+## 四、以后重新部署
+
+- **改了网页**（样式/文案/功能）：只需把改动的文件**重新上传**到 GitHub 仓库即可，数据库不用动。
+- **换了新的 Supabase 项目**，或**我改了表结构**：把 `supabase.sql` 再在 SQL Editor 跑一遍（幂等安全，不会删数据）。
+- 商品、穿搭、设置都存在 Supabase，**换网站/重发文件都不会丢数据**。
+
+---
+
+## 五、后台怎么用（admin.html）
+
+- **店铺联系方式与信息**：电话、微信号、微信二维码、地址、营业时间；还能改**首屏大图 / 首屏标题 / 副标题 / 顶部公告栏**，以及选**季节配色主题**（春夏秋冬各 2 套）。保存后展示页刷新生效。
+- **添加 / 编辑款式**：名称、分类、价格、标签、封面图、上身图（可多张）、尺码库存、说明。
+  - 列表里每件可 **编辑 / 上下架 / 删除 / 设为本周精选**。
+  - **售罄**：把尺码库存**明确填 0**（留空 = 显示「可咨询库存」）。
+  - 上传的图片会**自动压缩**（最长边 1600px），加载更快。
+- **穿搭（Lookbook）**：标题、封面、单品清单（每行「名称 | 备注」）、排序、显隐。展示页「来自店里的搭配记录」点击即弹出整套介绍。
+
+---
+
+## 六、前台功能一览
+
+- 商品卡悬停换图、心愿收藏（♡，存本机浏览器）、售罄标记。
+- 商品/穿搭详情弹窗，含放大查看图片。
+- **咨询这款**：复制该款专属链接并跳到微信区，提示粘贴发送给店主。
+- **分享**：手机端调起系统分享（微信/朋友圈/更多）；任意环境都可复制链接或扫二维码。
+- 分享链接是**深链**，打开后自动弹出对应的商品/穿搭。
+
+---
+
+## 七、常见问题
+
+- **后台登录失败**：确认 Supabase 里已创建该账号且已 Confirm；确认 `config.js` 的 URL/key 正确。
+- **图片传不上去**：确认 `supabase.sql` 已运行（会建 `product-images` 桶），且用店主账号已登录。
+- **改了公告/首屏没变**：公告和首屏现在由**后台设置**控制，直接改 `index.html` 会被覆盖，请在后台改。
+- **分享的「微信/朋友圈」按钮不出现**：该按钮只在手机浏览器出现；微信自带浏览器里无法调起，用「复制链接 / 扫码」代替。

@@ -1,3 +1,19 @@
+/* 自托管 Fraunces（拉丁可变字体，替代 Google Fonts，大陆可用） */
+@font-face {
+  font-family: "Fraunces";
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url("./fonts/fraunces-latin-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Fraunces";
+  font-style: italic;
+  font-weight: 300 600;
+  font-display: swap;
+  src: url("./fonts/fraunces-latin-italic.woff2") format("woff2");
+}
+
 /* =========================================================
    HangI0 — Editorial Womenswear
    纸感米白 · 墨色 · 陶土点缀 · 大衬线
@@ -16,9 +32,9 @@
   --clay-deep: #8f3f28;
   --cream-on-dark: #f0e9da;
 
-  --font-display: "Fraunces", "Noto Serif SC", Georgia, serif;
-  --font-serif: "Noto Serif SC", "Fraunces", Georgia, serif;
-  --font-sans: "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Fraunces", "Songti SC", "Noto Serif SC", "SimSun", Georgia, serif;
+  --font-serif: "Songti SC", "Noto Serif SC", "Source Han Serif SC", "SimSun", Georgia, serif;
+  --font-sans: "PingFang SC", "Microsoft YaHei", "微软雅黑", "Noto Sans SC", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   --edge: clamp(1.25rem, 5vw, 5rem);
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);

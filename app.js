@@ -777,7 +777,15 @@ function bindEvents() {
   document.querySelectorAll("[data-search-toggle]").forEach((btn) => btn.addEventListener("click", () => {
     const willOpen = !searchPanel?.classList.contains("open");
     searchPanel?.classList.toggle("open", willOpen);
-    if (willOpen) searchPanel?.querySelector("input")?.focus();
+    if (willOpen) {
+      searchPanel?.querySelector("input")?.focus();
+      document.querySelector("#index")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      const input = searchPanel?.querySelector("input");
+      if (input) input.value = "";
+      state.query = "";
+      renderProducts();
+    }
   }));
   document.querySelector("[data-search-input]")?.addEventListener("input", (e) => { state.query = e.target.value; renderProducts(); });
 
