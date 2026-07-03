@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>HangI0 | 店主后台</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23b0553a'/%3E%3Ctext x='16' y='22' font-family='Georgia,serif' font-size='18' fill='%23f4f0e7' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./admin.css" />
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="./config.js"></script>
+  </head>
+  <body class="admin-body">
+    <main class="admin-shell">
+      <section class="admin-hero">
+        <a class="brand" href="./index.html">
+          <span class="brand-word">HangI0</span>
+          <span class="brand-sub">店主后台</span>
+        </a>
+        <div class="admin-hero-copy">
+          <p class="eyebrow">店主系统</p>
+          <h1>展示页管理后台</h1>
+          <p>
+            在这里可以增删改所有商品、修改电话和微信快捷方式、维护「来自店里的穿搭」。改动保存后前台自动更新。
+          </p>
+        </div>
+        <a class="ghost-button dark" href="./index.html">
+          <i data-lucide="arrow-left"></i>
+          返回展示页
+        </a>
+      </section>
+
+      <!-- 登录 -->
+      <section class="admin-panel" data-auth-panel>
+        <div class="section-heading compact">
+          <p class="eyebrow">登录</p>
+          <h2>店主登录</h2>
+        </div>
+        <form class="admin-form auth-form" data-login-form>
+          <label>
+            邮箱
+            <input type="email" name="email" autocomplete="email" placeholder="owner@example.com" />
+          </label>
+          <label>
+            密码
+            <input type="password" name="password" autocomplete="current-password" placeholder="Supabase 登录密码" />
+          </label>
+          <button class="solid-button dark" type="submit">
+            <i data-lucide="log-in"></i>
+            登录后台
+          </button>
+          <p class="form-note" data-auth-note></p>
+        </form>
+      </section>
+
+      <!-- 店铺设置：电话 / 微信 快捷方式 -->
+      <section class="admin-panel">
+        <div class="section-heading compact">
+          <p class="eyebrow">快捷方式</p>
+          <h2>店铺联系方式与信息</h2>
+        </div>
+        <form class="admin-form" data-settings-form>
+          <div class="form-grid">
+            <label>
+              电话
+              <input name="phone" placeholder="例如：13800000000" />
+            </label>
+            <label>
+              微信号
+              <input name="wechat" placeholder="例如：HangI0-shop" />
+            </label>
+          </div>
+          <div class="upload-pair">
+            <fieldset>
+              <legend>微信二维码（可选）</legend>
+              <label>
+                上传二维码图片
+                <input name="wechatQrFile" type="file" accept="image/*" />
+              </label>
+              <label>
+                或填写图片链接
+                <input name="wechat_qr" type="url" placeholder="https://..." />
+              </label>
+            </fieldset>
+            <fieldset>
+              <legend>到店信息</legend>
+              <label>
+                地址
+                <input name="address" placeholder="示例市 · 示例区 · 示例路 88 号" />
+              </label>
+              <label>
+                营业时间
+                <input name="hours" placeholder="周二至周日 · 11:00 – 20:00" />
+              </label>
+            </fieldset>
+          </div>
+          <div class="upload-pair">
+            <fieldset>
+              <legend>首屏大图（hero）</legend>
+              <label>
+                上传图片
+                <input name="heroImageFile" type="file" accept="image/*" />
+              </label>
+              <label>
+                或填写图片链接
+                <input name="hero_image_url" type="url" placeholder="https://..." />
+              </label>
+            </fieldset>
+            <fieldset>
+              <legend>首屏标题</legend>
+              <label>
+                第一行
+                <input name="hero_line1" placeholder="夏日" />
+              </label>
+              <label>
+                第二行（强调色）
+                <input name="hero_line2" placeholder="新装" />
+              </label>
+            </fieldset>
+          </div>
+          <label>
+            首屏副标题
+            <textarea name="hero_sub" rows="2" placeholder="为长日照、微风与周末出行准备的轻盈女装。"></textarea>
+          </label>
+          <label>
+            顶部公告栏（每行一条，自动循环滚动）
+            <textarea name="announce" rows="3" placeholder="满 ¥499 免配送&#10;365 天内可调换&#10;每周三 / 周六上新"></textarea>
+          </label>
+
+          <div class="theme-block">
+            <p class="field-label">展示页配色主题（按季节，点选后保存生效）</p>
+            <div class="theme-picker" data-theme-picker></div>
+            <input type="hidden" name="theme" data-theme-input value="autumn-clay" />
+          </div>
+          <button class="solid-button dark" type="submit">
+            <i data-lucide="save"></i>
+            保存店铺信息
+          </button>
+          <p class="form-note" data-settings-note></p>
+        </form>
+      </section>
+
+      <!-- 新增 / 编辑 款式 -->
+      <section class="admin-panel">
+        <div class="section-heading compact">
+          <p class="eyebrow" data-product-mode-label>发布</p>
+          <h2 data-product-form-title>添加新款</h2>
+        </div>
+        <form class="admin-form" data-product-form>
+          <input type="hidden" name="editId" data-product-edit-id value="" />
+          <div class="form-grid">
+            <label>
+              款式名称
+              <input required name="name" placeholder="例如：白色廓形衬衫" />
+            </label>
+            <label>
+              分类
+              <select required name="category">
+                <option value="dress">连衣裙</option>
+                <option value="outerwear">外套</option>
+                <option value="daily">上衣</option>
+                <option value="bottom">下装</option>
+                <option value="set">套装</option>
+              </select>
+            </label>
+            <label>
+              价格
+              <input required name="price" placeholder="例如：¥699" />
+            </label>
+            <label>
+              标签（可留空）
+              <input name="tag" placeholder="如：新品 / 热卖 / 限量 / 显瘦" list="tag-options" />
+              <datalist id="tag-options">
+                <option value="新品"></option>
+                <option value="热卖"></option>
+                <option value="限量"></option>
+                <option value="显瘦"></option>
+                <option value="日常"></option>
+                <option value="套装"></option>
+              </datalist>
+            </label>
+          </div>
+
+          <div class="upload-pair">
+            <fieldset>
+              <legend>产品封面图（单品图）</legend>
+              <label>
+                上传图片
+                <input name="coverImageFile" type="file" accept="image/*" />
+              </label>
+              <label>
+                或填写图片链接
+                <input name="cover_image_url" type="url" placeholder="https://..." />
+              </label>
+            </fieldset>
+            <fieldset>
+              <legend>上身效果图（可多张）</legend>
+              <label>
+                上传多张图片
+                <input name="modelImageFiles" type="file" accept="image/*" multiple />
+              </label>
+              <label>
+                或填写图片链接，一行一张
+                <textarea name="model_image_urls" rows="4" placeholder="https://...&#10;https://..."></textarea>
+              </label>
+            </fieldset>
+          </div>
+
+          <fieldset class="stock-fieldset">
+            <legend>尺码与库存</legend>
+            <div class="stock-grid" aria-label="尺码库存">
+              <label>XS<input name="stock_xs" type="number" min="0" step="1" placeholder="0" /></label>
+              <label>S<input name="stock_s" type="number" min="0" step="1" placeholder="0" /></label>
+              <label>M<input name="stock_m" type="number" min="0" step="1" placeholder="0" /></label>
+              <label>L<input name="stock_l" type="number" min="0" step="1" placeholder="0" /></label>
+              <label>XL<input name="stock_xl" type="number" min="0" step="1" placeholder="0" /></label>
+              <label>均码<input name="stock_free" type="number" min="0" step="1" placeholder="0" /></label>
+            </div>
+          </fieldset>
+
+          <label>
+            款式说明
+            <textarea name="description" rows="4" placeholder="面料、版型、适合场景、尺码建议..."></textarea>
+          </label>
+          <label class="check-label">
+            <input name="published" type="checkbox" checked />
+            发布到展示页
+          </label>
+          <div class="form-actions">
+            <button class="solid-button dark" type="submit" data-product-submit>
+              <i data-lucide="upload-cloud"></i>
+              保存款式
+            </button>
+            <button class="ghost-button" type="button" data-product-cancel hidden>取消编辑</button>
+          </div>
+          <p class="form-note" data-form-note></p>
+        </form>
+      </section>
+
+      <!-- 款式列表 -->
+      <section class="admin-panel">
+        <div class="section-heading compact">
+          <p class="eyebrow">库存</p>
+          <h2>已添加款式</h2>
+        </div>
+        <div class="admin-list" data-admin-list></div>
+      </section>
+
+      <!-- 穿搭管理 -->
+      <section class="admin-panel">
+        <div class="section-heading compact">
+          <p class="eyebrow" data-outfit-mode-label>搭配</p>
+          <h2 data-outfit-form-title>添加穿搭（Lookbook）</h2>
+        </div>
+        <form class="admin-form" data-outfit-form>
+          <input type="hidden" name="editId" data-outfit-edit-id value="" />
+          <div class="form-grid">
+            <label>
+              标题
+              <input required name="title" placeholder="例如：街头 · 松弛廓形" />
+            </label>
+            <label>
+              排序（数字越小越靠前）
+              <input name="sort" type="number" step="1" placeholder="0" />
+            </label>
+          </div>
+          <div class="upload-pair">
+            <fieldset>
+              <legend>封面图</legend>
+              <label>
+                上传图片
+                <input name="coverImageFile" type="file" accept="image/*" />
+              </label>
+              <label>
+                或填写图片链接
+                <input name="cover_image_url" type="url" placeholder="https://..." />
+              </label>
+            </fieldset>
+            <fieldset>
+              <legend>更多图片（可选，一行一张）</legend>
+              <label>
+                图片链接
+                <textarea name="image_urls" rows="4" placeholder="https://...&#10;https://..."></textarea>
+              </label>
+            </fieldset>
+          </div>
+          <label>
+            这一套包含（每行一件：名称 | 备注）
+            <textarea name="items" rows="4" placeholder="燕麦色西装外套 | S/M 现货&#10;高腰直筒牛仔裤 | 浅蓝洗水&#10;圆头乐福鞋 |"></textarea>
+          </label>
+          <label>
+            搭配说明
+            <textarea name="description" rows="3" placeholder="这套怎么搭、适合什么场合..."></textarea>
+          </label>
+          <label class="check-label">
+            <input name="published" type="checkbox" checked />
+            显示在展示页
+          </label>
+          <div class="form-actions">
+            <button class="solid-button dark" type="submit" data-outfit-submit>
+              <i data-lucide="upload-cloud"></i>
+              保存穿搭
+            </button>
+            <button class="ghost-button" type="button" data-outfit-cancel hidden>取消编辑</button>
+          </div>
+          <p class="form-note" data-outfit-note></p>
+        </form>
+        <div class="admin-list" data-outfit-list></div>
+      </section>
+    </main>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./admin.js?v=trend-1"></script>
+  </body>
+</html>
