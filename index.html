@@ -1,238 +1,280 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>拼豆精灵 | 你的第一张原创拼豆图纸</title>
-  <meta name="description" content="拼豆精灵是一款把空白画布、AI 共创、图纸社区、智能拼豆板和材料清单连接起来的拼豆创作平台。">
-  <link rel="stylesheet" href="styles.css">
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
-  <script src="app.js" defer></script>
-</head>
-<body>
-  <div class="loader" id="loader" aria-hidden="true">
-    <div class="loader-sprite" id="loaderSprite"></div>
-    <p>One moment please...</p>
-  </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="HangI0 女装买手店 —— 线上看款、到店试穿。每周上新连衣裙、上衣、下装、外套与套装。" />
+    <meta name="theme-color" content="#16130E" />
+    <title>HangI0 — 女装 · 每周上新</title>
 
-  <div class="progress-bar" aria-hidden="true"></div>
+    <!-- 社交分享卡（微信/朋友圈/其他分享时显示标题图） -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="HangI0 — 女装 · 每周上新" />
+    <meta property="og:description" content="HangI0 女装买手店 —— 线上看款、到店试穿。每周上新连衣裙、上衣、下装、外套与套装。" />
+    <meta property="og:image" content="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=85" />
+    <meta name="twitter:card" content="summary_large_image" />
 
-  <header class="topbar">
-    <a class="brand" href="#top" aria-label="拼豆精灵">
-      <span class="brand-mark">●</span>
-      <span>BEAD SPRITE</span>
-    </a>
-    <nav class="nav-links" aria-label="官网导航">
-      <a href="#spirit">精灵</a>
-      <a href="#studio">创作</a>
-      <a href="#memory">记忆</a>
-      <a href="#board">智能板</a>
-      <a href="#launch">MVP</a>
+    <!-- 临时 favicon（等真实 logo 到手再替换） -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23b0553a'/%3E%3Ctext x='16' y='22' font-family='Georgia,serif' font-size='18' fill='%23f4f0e7' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E" />
+
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    <link rel="preconnect" href="https://xeezfiazvuqjtjsghaqs.supabase.co" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..600&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;500;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="./config.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#index">跳到商品区</a>
+
+    <!-- 顶部公告 -->
+    <div class="announce" role="note">
+      <div class="announce-track" data-announce-track aria-hidden="true">
+        <span>满 ¥499 免配送</span><span>·</span>
+        <span>10 天内可调换</span><span>·</span>
+        <span>每周三 / 周六上新</span><span>·</span>
+        <span>线上看款 · 到店试穿</span><span>·</span>
+        <span>满 ¥499 免配送</span><span>·</span>
+        <span>10 天内可调换</span><span>·</span>
+        <span>每周三 / 周六上新</span><span>·</span>
+        <span>线上看款 · 到店试穿</span><span>·</span>
+      </div>
+    </div>
+
+    <!-- 顶部导航 -->
+    <header class="nav" data-header>
+      <button class="nav-burger" type="button" data-menu-toggle aria-label="打开菜单">
+        <span></span><span></span>
+      </button>
+
+      <nav class="nav-links left" aria-label="女装分类">
+        <a href="#index" data-nav-filter="all">全部</a>
+        <a href="#index" data-nav-filter="dress">连衣裙</a>
+        <a href="#index" data-nav-filter="daily">上衣</a>
+        <a href="#index" data-nav-filter="bottom">下装</a>
+      </nav>
+
+      <a class="nav-brand" href="#top" aria-label="HangI0 首页">
+        <!-- 有 logo 图片时，把下面整个 brand-word 换成：<img src="./logo.svg" alt="HangI0" class="brand-logo" /> -->
+        <span class="brand-word">Hang<em>I0</em></span>
+      </a>
+
+      <div class="nav-actions">
+        <button class="nav-icon" type="button" data-search-toggle aria-label="搜索款式">搜索</button>
+        <button class="nav-icon wish" type="button" data-wishlist-open aria-label="心愿单">♡<span class="wish-count" data-wish-count></span></button>
+        <a class="nav-icon strong" href="#visit">到店</a>
+        <a class="nav-icon" href="./admin.html" aria-label="店主后台" title="店主后台">·</a>
+      </div>
+    </header>
+
+    <!-- 手机菜单 -->
+    <nav class="mobile-menu" data-mobile-menu aria-label="手机菜单">
+      <a href="#index" data-nav-filter="all">全部新品</a>
+      <a href="#index" data-nav-filter="dress">连衣裙</a>
+      <a href="#index" data-nav-filter="daily">上衣</a>
+      <a href="#index" data-nav-filter="bottom">下装</a>
+      <a href="#index" data-nav-filter="outerwear">外套</a>
+      <a href="#index" data-nav-filter="set">套装</a>
+      <a href="#visit">预约到店</a>
+      <a href="./admin.html">店主后台</a>
     </nav>
-    <a class="nav-cta" href="#launch">加入内测</a>
-  </header>
 
-  <main id="top">
-    <section class="hero">
-      <div class="bead-noise" aria-hidden="true"></div>
-      <div class="hero-shell">
-        <div class="event-card">
-          <div class="event-top">
-            <strong>SPRITE'26</strong>
-            <button type="button" aria-label="关闭装饰卡片">×</button>
+    <!-- 搜索面板 -->
+    <div class="search-layer" data-search-panel>
+      <div class="search-inner">
+        <label>
+          <span>搜索</span>
+          <input type="search" placeholder="连衣裙 / 衬衫 / 半裙 / 外套 / 套装…" data-search-input />
+        </label>
+        <button class="search-close" type="button" data-search-toggle aria-label="关闭搜索">关闭</button>
+      </div>
+    </div>
+
+    <main id="top">
+      <!-- HERO -->
+      <section class="hero" aria-label="女装主视觉">
+        <div class="hero-type">
+          <p class="hero-kicker"><span>HangI0</span><span>女装买手店 · Est. 2019</span></p>
+          <h1 class="hero-title">
+            <span class="line" data-hero-line1>夏日</span>
+            <span class="line italic" data-hero-line2>新装</span>
+          </h1>
+          <p class="hero-sub" data-hero-sub>为长日照、微风与周末出行准备的轻盈女装。<br />线上看款，到店试穿。</p>
+          <div class="hero-cta">
+            <a class="btn solid" href="#index">看本周上新</a>
+            <a class="btn line" href="#visit">预约到店 →</a>
           </div>
-          <div class="event-art">
-            <div class="pixel-map" aria-hidden="true">
-              <span class="b p1"></span><span class="b p2"></span><span class="b p3"></span>
-              <span class="b p4"></span><span class="b p5"></span><span class="b p6"></span>
-              <span class="b p7"></span><span class="b p8"></span><span class="b p9"></span>
+        </div>
+        <div class="hero-media" data-parallax>
+          <img
+            data-hero-image
+            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1400&q=85"
+            alt="夏季女装模特穿搭"
+          />
+          <span class="hero-tag">本季主打 · SUMMER</span>
+        </div>
+        <a class="hero-scroll" href="#index" aria-label="向下滚动">向下 · SCROLL</a>
+      </section>
+
+      <!-- 跑马灯 -->
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee-track">
+          <span>NEW IN</span><i>✦</i><span>每周上新</span><i>✦</i><span>WOMENSWEAR</span><i>✦</i>
+          <span>到店试穿</span><i>✦</i><span>HangI0</span><i>✦</i><span>连衣裙 · 上衣 · 下装</span><i>✦</i>
+          <span>NEW IN</span><i>✦</i><span>每周上新</span><i>✦</i><span>WOMENSWEAR</span><i>✦</i>
+          <span>到店试穿</span><i>✦</i><span>HangI0</span><i>✦</i><span>连衣裙 · 上衣 · 下装</span><i>✦</i>
+        </div>
+      </div>
+
+      <!-- 宣言 -->
+      <section class="manifesto" data-reveal>
+        <p>
+          <em>只做女装。</em> 我们相信一件好衣服，<br class="br-desktop" />
+          能在你走进房间的那一刻，替你先开口。
+        </p>
+      </section>
+
+      <!-- 精选 FEATURE -->
+      <section class="feature" id="feature" aria-label="本周精选" data-feature></section>
+
+      <!-- 商品索引 -->
+      <section class="collection" id="index" aria-labelledby="index-title">
+        <div class="collection-head" data-reveal>
+          <div class="collection-title">
+            <span class="idx">◦ 目录 / INDEX</span>
+            <h2 id="index-title">刚刚上新</h2>
+          </div>
+          <div class="filter-bar" role="tablist" aria-label="款式分类">
+            <button class="filter active" type="button" data-filter="all">全部</button>
+            <button class="filter" type="button" data-filter="dress">连衣裙</button>
+            <button class="filter" type="button" data-filter="daily">上衣</button>
+            <button class="filter" type="button" data-filter="bottom">下装</button>
+            <button class="filter" type="button" data-filter="outerwear">外套</button>
+            <button class="filter" type="button" data-filter="set">套装</button>
+          </div>
+        </div>
+
+        <div class="product-grid" data-product-grid aria-live="polite"></div>
+        <p class="collection-count" data-count-label></p>
+      </section>
+
+      <!-- Lookbook 拼贴 -->
+      <section class="lookbook" id="lookbook" aria-label="搭配记录">
+        <div class="lookbook-head" data-reveal>
+          <span class="idx">◦ 搭配 / LOOKBOOK</span>
+          <h2>来自店里的搭配记录</h2>
+        </div>
+        <div class="lookbook-grid" data-lookbook-grid aria-live="polite"></div>
+      </section>
+
+      <!-- 到店 -->
+      <section class="visit" id="visit">
+        <div class="visit-inner" data-reveal>
+          <span class="idx light">◦ 到店 / VISIT</span>
+          <h2>线上看款<br />到店试穿</h2>
+          <p>看中的款式，直接电话或微信联系店主确认尺码、库存与到店试穿。后台上传的新款会自动进入女装目录。</p>
+          <div class="visit-actions">
+            <a class="btn solid light" data-visit-phone href="tel:">电话咨询</a>
+            <button class="btn line light" type="button" data-visit-wechat>加微信 / 复制微信号</button>
+          </div>
+          <div class="wechat-card" data-wechat-card hidden>
+            <div class="wechat-card-info">
+              <span>店主微信号</span>
+              <strong data-wechat-id></strong>
+              <button class="mini-btn" type="button" data-copy-wechat>复制微信号</button>
             </div>
-            <div class="hero-sprite" id="heroSprite" aria-label="拼豆精灵像素形象"></div>
+            <img class="wechat-card-qr" data-wechat-qr alt="微信二维码" hidden />
           </div>
-          <div class="event-meta">
-            <span>FIRST MISSION</span>
-            <i></i>
-            <span>DESIGN YOUR SPRITE</span>
-          </div>
+          <dl class="visit-meta">
+            <div><dt>电话</dt><dd data-meta-phone>—</dd></div>
+            <div><dt>微信</dt><dd data-meta-wechat>—</dd></div>
+            <div><dt>地址</dt><dd data-meta-address>—</dd></div>
+            <div><dt>营业</dt><dd data-meta-hours>—</dd></div>
+          </dl>
         </div>
+      </section>
+    </main>
 
-        <div class="hero-copy-wrap">
-          <p class="eyebrow">拼豆精灵 = 用户养成的、由像素豆子构成的虚拟伙伴</p>
-          <h1>先养成一个精灵，再开始你的拼豆宇宙。</h1>
-          <p class="hero-copy">新用户的第一个任务不是上传照片，而是在空白画布上拼出自己的精灵。精灵本身就是一张原创图纸，它会陪你生成、编辑、制作、分享，并随着创作成长。</p>
-          <div class="hero-actions">
-            <a class="button primary" href="#spirit"><i data-lucide="sparkles"></i>看精灵机制</a>
-            <a class="button ghost" href="#studio"><i data-lucide="paintbrush"></i>看创作流程</a>
-          </div>
-        </div>
+    <footer class="site-footer">
+      <div class="foot-brand">
+        <strong>HangI0</strong>
+        <p>女装新品 · 搭配企划 · 到店试穿</p>
       </div>
-    </section>
+      <nav class="foot-nav" aria-label="页脚链接">
+        <a href="#index" data-nav-filter="all">全部</a>
+        <a href="#index" data-nav-filter="dress">连衣裙</a>
+        <a href="#index" data-nav-filter="daily">上衣</a>
+        <a href="#index" data-nav-filter="bottom">下装</a>
+        <a href="#visit">联系</a>
+        <button class="foot-share" type="button" data-store-share>分享本店</button>
+        <a href="./admin.html">店主后台</a>
+      </nav>
+      <p class="foot-copy">© <span data-year></span> HangI0 · 仅展示女装</p>
+    </footer>
 
-    <section class="ticker" aria-label="核心定位">
-      <div class="ticker-track">
-        <span>ORIGINAL FIRST</span>
-        <span>BEAD PARTICLES</span>
-        <span>AI CO-CREATION</span>
-        <span>HEALING COMPANION</span>
-        <span>SMART BOARD READY</span>
-        <span>UGC CHALLENGE</span>
-      </div>
-    </section>
+    <!-- 商品详情弹窗 -->
+    <dialog class="product-dialog" data-product-dialog>
+      <button class="dialog-close" type="button" data-dialog-close aria-label="关闭">关闭 ✕</button>
+      <div data-dialog-content></div>
+    </dialog>
 
-    <section class="section spirit-section" id="spirit">
-      <div class="section-head">
-        <p class="kicker">01 / Sprite system</p>
-        <h2>精灵不是小游戏，是核心创作机制本身。</h2>
-      </div>
-      <div class="spirit-grid">
-        <article class="sprite-card big">
-          <div class="card-label">FIRST TASK</div>
-          <h3>空白画布设计精灵</h3>
-          <p>新手从基础骨架开始改色、换表情、加配饰，第一张图纸 100% 原创，也天然规避版权风险。</p>
-          <div class="mini-canvas">
-            <div class="canvas-grid" id="canvasSprite"></div>
-          </div>
-        </article>
-        <article class="sprite-card">
-          <div class="card-label">GROW</div>
-          <h3>随创作成长</h3>
-          <p>完成图纸、打卡、参加挑战会解锁姿态、场景和配饰，但走治愈路线，不做焦虑式催促。</p>
-        </article>
-        <article class="sprite-card">
-          <div class="card-label">ASSIST</div>
-          <h3>嵌入每个流程</h3>
-          <p>上传时它观察，生成时它思考，编辑时给建议，完成时庆祝。陪伴感进入工具链路。</p>
-        </article>
-        <article class="sprite-card dark">
-          <div class="card-label">SHARE</div>
-          <h3>分享自带识别点</h3>
-          <p>晒图时带上自己的精灵形象，平台逐渐沉淀原创 IP，而不是只搬运外部 IP。</p>
-        </article>
-      </div>
-    </section>
+    <!-- 穿搭详情弹窗 -->
+    <dialog class="product-dialog outfit-dialog" data-outfit-dialog>
+      <button class="dialog-close" type="button" data-outfit-close aria-label="关闭">关闭 ✕</button>
+      <div data-outfit-content></div>
+    </dialog>
 
-    <section class="section studio-section" id="studio">
-      <div class="section-head">
-        <p class="kicker">02 / Studio</p>
-        <h2>从“图转图”升级到“万物转图纸”。</h2>
-      </div>
-      <div class="studio-layout">
-        <div class="input-stack">
-          <div class="input-chip active"><i data-lucide="type"></i><span>文字描述生成</span><em>戴墨镜的橘猫，赛博朋克风</em></div>
-          <div class="input-chip"><i data-lucide="images"></i><span>多图融合</span><em>我 + 宠物 + 风格参考</em></div>
-          <div class="input-chip"><i data-lucide="sliders-horizontal"></i><span>指令式定制</span><em>颜色少一点，更适合新手</em></div>
-          <div class="input-chip"><i data-lucide="grid-3x3"></i><span>空白画布</span><em>从零拼出原创精灵</em></div>
-        </div>
-        <div class="studio-phone">
-          <img src="assets/pindou_ui_03_editor.png" alt="拼豆编辑器 UI">
-        </div>
-        <div class="rule-panel">
-          <h3>拼豆专属规则层</h3>
-          <ul>
-            <li>颜色数量约束</li>
-            <li>像素网格规则</li>
-            <li>可制作性校验</li>
-            <li>材料清单同步</li>
-          </ul>
-          <p>壁垒不在通用生成模型，而在模型是否真的懂拼豆。</p>
-        </div>
-      </div>
-    </section>
+    <!-- 心愿单弹窗 -->
+    <dialog class="product-dialog wishlist-dialog" data-wishlist-dialog>
+      <button class="dialog-close" type="button" data-wishlist-close aria-label="关闭">关闭 ✕</button>
+      <div class="wishlist-head"><span class="idx">◦ 收藏 / WISHLIST</span><h3>我的心愿单</h3></div>
+      <div data-wishlist-content></div>
+    </dialog>
 
-    <section class="section memory-section" id="memory">
-      <div class="section-head">
-        <p class="kicker">03 / Long memory</p>
-        <h2>把推荐算法包装成“懂你的伙伴”。</h2>
+    <!-- 分享弹窗 -->
+    <dialog class="product-dialog share-dialog" data-share-dialog>
+      <button class="dialog-close" type="button" data-share-close aria-label="关闭">关闭 ✕</button>
+      <div class="share-inner">
+        <span class="idx">◦ 分享 / SHARE</span>
+        <h3 data-share-title>分享</h3>
+        <button class="btn solid share-native" type="button" data-share-native hidden>分享给微信 / 朋友圈 / 更多…</button>
+        <button class="btn line" type="button" data-share-copy>复制链接</button>
+        <div class="share-qr" data-share-qr aria-label="二维码"></div>
+        <p class="share-hint">复制链接后在微信粘贴发送；或让好友扫描二维码直接打开这一页。</p>
       </div>
-      <div class="memory-board">
-        <div class="memory-card">
-          <span>记住题材</span>
-          <strong>宠物、情侣、节日、国风</strong>
-        </div>
-        <div class="memory-card">
-          <span>记住审美</span>
-          <strong>常用色系、难度、尺寸</strong>
-        </div>
-        <div class="memory-card">
-          <span>给出建议</span>
-          <strong>“你上次很喜欢治愈系猫咪。”</strong>
-        </div>
-        <div class="memory-card glow">
-          <span>情绪价值</span>
-          <strong>陪伴，不催促；鼓励，不焦虑。</strong>
-        </div>
-      </div>
-    </section>
+    </dialog>
 
-    <section class="section challenge-section">
-      <div class="section-head">
-        <p class="kicker">04 / UGC co-create</p>
-        <h2>比晒成品更容易裂变的是接龙共创。</h2>
+    <!-- 浮动联系快捷入口 -->
+    <div class="fab" data-fab>
+      <div class="fab-wechat-pop" data-fab-pop hidden>
+        <p>店主微信号</p>
+        <strong data-fab-wechat-id></strong>
+        <button class="mini-btn" type="button" data-copy-wechat>复制微信号</button>
+        <img data-fab-wechat-qr alt="微信二维码" hidden />
       </div>
-      <div class="challenge-grid">
-        <article>
-          <div class="pixel-badge">A</div>
-          <h3>接力拼图</h3>
-          <p>一张大图拆成多个区块，邀请好友或社群成员分别完成，最后合成完整作品。</p>
-        </article>
-        <article>
-          <div class="pixel-badge">B</div>
-          <h3>同图二创挑战</h3>
-          <p>同一底图，不同用户做不同配色，形成“一题多解”的内容池。</p>
-        </article>
-        <article>
-          <div class="pixel-badge">C</div>
-          <h3>精灵带图出圈</h3>
-          <p>分享时带上自己的精灵，让每张作品都有平台识别点。</p>
-        </article>
-      </div>
-    </section>
+      <a class="fab-btn phone" data-fab-phone href="tel:" aria-label="电话联系店主">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      </a>
+      <button class="fab-btn wechat" type="button" data-fab-wechat aria-label="微信联系店主">
+        <svg viewBox="0 0 24 24" width="21" height="21" fill="currentColor"><path d="M9 3C4.9 3 1.5 5.9 1.5 9.4c0 1.9 1 3.6 2.7 4.8L3.4 16l2.2-1.1c.8.2 1.6.4 2.5.4h.5a5.4 5.4 0 0 1-.2-1.5c0-3.2 3-5.7 6.8-5.7h.4C15.2 5 12.4 3 9 3zm-2.6 3.8a.95.95 0 1 1 0 1.9.95.95 0 0 1 0-1.9zm5.2 0a.95.95 0 1 1 0 1.9.95.95 0 0 1 0-1.9z"/><path d="M22.5 14.2c0-2.9-2.8-5.2-6.2-5.2s-6.2 2.3-6.2 5.2 2.8 5.2 6.2 5.2c.7 0 1.4-.1 2-.3l1.9.9-.5-1.6c1.7-1 2.8-2.5 2.8-4.2zm-8.2-1.1a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6zm4 0a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6z"/></svg>
+      </button>
+    </div>
 
-    <section class="section board-section" id="board">
-      <div class="section-head">
-        <p class="kicker">05 / Smart board</p>
-        <h2>图纸、精灵和智能拼豆板天然联动。</h2>
-      </div>
-      <div class="board-layout">
-        <div class="board-copy">
-          <div class="board-step active"><span>连接</span><p>APP 同步图纸、精灵状态和制作步骤。</p></div>
-          <div class="board-step"><span>引导</span><p>板子按颜色或区域发光，新手不用一直数格子。</p></div>
-          <div class="board-step"><span>庆祝</span><p>完成作品后精灵反馈，用户自然进入晒图和材料复购。</p></div>
-        </div>
-        <figure class="board-visual">
-          <img src="assets/pindou_ui_imagegen_1.png" alt="智能拼豆板与 APP 联动示例">
-        </figure>
-      </div>
-    </section>
+    <!-- 提示 toast -->
+    <div class="toast" data-toast hidden></div>
 
-    <section class="section launch-section" id="launch">
-      <div class="section-head">
-        <p class="kicker">06 / MVP scope</p>
-        <h2>第一版做小，但把“精灵”做深。</h2>
-      </div>
-      <div class="launch-grid">
-        <article>
-          <span>必须做</span>
-          <h3>自定义精灵外形</h3>
-          <p>基础骨架、改色、表情、保存为第一张原创图纸。</p>
-        </article>
-        <article>
-          <span>必须做</span>
-          <h3>基础成长等级</h3>
-          <p>完成图纸和创作行为带来轻量成长，不做重运营。</p>
-        </article>
-        <article>
-          <span>必须做</span>
-          <h3>关键节点反馈</h3>
-          <p>生成、编辑、完成时出现精灵反馈，增强陪伴感。</p>
-        </article>
-        <article>
-          <span>先留接口</span>
-          <h3>多模态与共创</h3>
-          <p>文字、多图、接力拼图、二创挑战先预留数据结构。</p>
-        </article>
-      </div>
-    </section>
-  </main>
-</body>
+    <!-- 定制光标 -->
+    <div class="cursor" data-cursor aria-hidden="true">
+      <svg class="cursor-heart" viewBox="0 0 32 29" aria-hidden="true"><path d="M16 28C16 28 2 19.5 2 9.8 2 5.5 5.3 2.5 9.2 2.5c2.7 0 5 1.5 6.8 4 1.8-2.5 4.1-4 6.8-4C26.7 2.5 30 5.5 30 9.8 30 19.5 16 28 16 28z"/></svg>
+      <span data-cursor-label></span>
+    </div>
+
+    <script src="./app.js?v=trend-1"></script>
+  </body>
 </html>
