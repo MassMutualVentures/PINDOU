@@ -62,6 +62,7 @@
       <div class="nav-actions">
         <button class="nav-icon" type="button" data-search-toggle aria-label="搜索款式">搜索</button>
         <button class="nav-icon wish" type="button" data-wishlist-open aria-label="心愿单">♡<span class="wish-count" data-wish-count></span></button>
+        <button class="nav-icon cart-btn dopamine-only" type="button" data-cart-open aria-label="购物车">🛒<span class="cart-count" data-cart-count></span></button>
         <a class="nav-icon strong" href="#visit">到店</a>
         <a class="nav-icon" href="./admin.html" aria-label="店主后台" title="店主后台">·</a>
       </div>
@@ -244,6 +245,80 @@
         <div class="share-qr" data-share-qr aria-label="二维码"></div>
         <p class="share-hint">复制链接后在微信粘贴发送；或让好友扫描二维码直接打开这一页。</p>
       </div>
+    </dialog>
+
+    <!-- 解压模式：入口（未进入时显示） -->
+    <button class="dopamine-fab" type="button" data-dopamine-enter aria-label="进入解压空间">
+      <span class="dopa-dot" aria-hidden="true"></span>解压空间
+    </button>
+
+    <!-- 解压模式：常驻提醒条（进入后显示） -->
+    <div class="dopamine-bar dopamine-only" role="note">
+      <span>解压模式 · 纯模拟，不扣费、不会真实发货</span>
+      <button type="button" data-dopamine-exit>退出</button>
+    </div>
+
+    <!-- 解压模式：全屏进入页 -->
+    <dialog class="dopamine-intro-dialog" data-dopamine-intro>
+      <div class="dopa-orbs" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="dopamine-intro">
+        <p class="dopa-kicker">DOPAMINE MODE</p>
+        <h2 class="dopa-title">尽情买买买<br /><em>不花一分钱</em></h2>
+        <p class="dopa-desc">一个 <strong>100% 模拟</strong>的网购解压空间：加购、下单、黑卡付款、物流、签收，一样不少。<br />
+          <strong>但不会扣任何费用，你也不会真的收到快递。</strong>只为让你放松、爽一下。</p>
+        <div class="dopa-actions">
+          <button class="dopa-enter-btn" type="button" data-dopamine-confirm>进入多巴胺模式</button>
+          <button class="dopa-skip" type="button" data-dopamine-cancel>先不了</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- 解压模式：购物车 -->
+    <dialog class="product-dialog cart-dialog" data-cart-dialog>
+      <button class="dialog-close" type="button" data-cart-close aria-label="关闭">关闭 ✕</button>
+      <div class="cart-head"><span class="idx">◦ 购物车 / CART（模拟）</span><h3>我的购物车</h3></div>
+      <div data-cart-content></div>
+    </dialog>
+
+    <!-- 解压模式：确认订单 -->
+    <dialog class="product-dialog checkout-dialog" data-checkout-dialog>
+      <button class="dialog-close" type="button" data-checkout-close aria-label="关闭">关闭 ✕</button>
+      <div class="checkout-inner">
+        <span class="idx">◦ 确认订单 / CHECKOUT</span>
+        <h3>确认订单</h3>
+        <form data-checkout-form class="checkout-form">
+          <div class="co-section">
+            <p class="co-label">收货地址</p>
+            <label>收货人<input name="name" required placeholder="你的名字" /></label>
+            <label>手机号<input name="phone" required placeholder="11 位手机号" inputmode="numeric" /></label>
+            <label>收货地址<textarea name="address" required rows="2" placeholder="省 / 市 / 区 / 详细地址"></textarea></label>
+          </div>
+          <div class="co-section">
+            <p class="co-label">支付方式</p>
+            <div class="pay-card">
+              <div class="pay-card-top"><span class="pay-card-brand">招商银行 · 黑金信用卡</span><span class="pay-card-chip"></span></div>
+              <div class="pay-card-no">**** **** **** 8888</div>
+              <div class="pay-card-bottom"><span>已绑定 · 默认</span><span>VISA INFINITE</span></div>
+            </div>
+          </div>
+          <div class="co-foot">
+            <div class="checkout-total" data-checkout-total></div>
+            <button class="btn solid" type="submit">提交订单</button>
+          </div>
+          <p class="dopamine-mini">模拟下单，不会产生任何费用，也不会真实配送。</p>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- 解压模式：支付 -->
+    <dialog class="product-dialog payment-dialog" data-payment-dialog>
+      <div class="payment-inner" data-payment-content></div>
+    </dialog>
+
+    <!-- 解压模式：物流追踪 -->
+    <dialog class="product-dialog tracking-dialog" data-tracking-dialog>
+      <button class="dialog-close" type="button" data-tracking-close aria-label="关闭" hidden>关闭 ✕</button>
+      <div class="tracking-inner" data-tracking-content></div>
     </dialog>
 
     <!-- 浮动联系快捷入口 -->

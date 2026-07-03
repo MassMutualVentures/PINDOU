@@ -318,12 +318,13 @@ function renderProducts() {
           </div>
           <span class="pcard-price">${esc(p.price || "")}</span>
         </div>
+        <button class="pcard-cart dopamine-only" type="button" data-add-cart="${esc(p.id)}">🛒 加入购物车</button>
       </article>`;
   }).join("");
 
   grid.querySelectorAll("[data-product-id]").forEach((card) => {
     card.addEventListener("click", (e) => {
-      if (e.target.closest("[data-like]")) return;
+      if (e.target.closest("[data-like]") || e.target.closest("[data-add-cart]")) return;
       openProduct(card.dataset.productId);
     });
     card.addEventListener("keydown", (e) => {
@@ -337,6 +338,12 @@ function renderProducts() {
       btn.classList.toggle("is-liked", liked);
       updateWishCount();
       showToast(liked ? "已加入心愿单 ♥" : "已移出心愿单");
+    });
+  });
+  grid.querySelectorAll("[data-add-cart]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      addToCart(state.products.find((p) => p.id === btn.dataset.addCart));
     });
   });
   revealObserve(grid.querySelectorAll(".pcard"));
@@ -545,6 +552,8 @@ function openProduct(productId) {
         <div class="clothing-preview"><img src="${esc(clothingImage)}" alt="${esc(product.name)} 单品图"></div>
         ${stockMarkup}
         <div class="dialog-actions">
+          <button class="btn solid dopamine-only" type="button" data-dlg-buy>立即购买</button>
+          <button class="btn line dopamine-only" type="button" data-dlg-cart>加入购物车</button>
           <button class="btn solid" type="button" data-product-consult>咨询这款 →</button>
           <button class="btn line" type="button" data-product-share>分享</button>
         </div>
@@ -566,6 +575,8 @@ function openProduct(productId) {
   });
   content.querySelector("[data-product-consult]")?.addEventListener("click", () => consult("product", product));
   content.querySelector("[data-product-share]")?.addEventListener("click", () => openShare({ title: `${product.name}｜HangI0`, url: buildShareLink("product", product.id) }));
+  content.querySelector("[data-dlg-cart]")?.addEventListener("click", () => addToCart(product));
+  content.querySelector("[data-dlg-buy]")?.addEventListener("click", () => { dialog.close(); buyNow(product); });
 }
 
 /* ---------- 店铺设置注入 ---------- */
@@ -841,6 +852,7 @@ async function init() {
   bindEvents();
   setupCursor();
   setupParallax();
+  setupDopamine();
   handleDeepLink();
 }
 
@@ -854,3 +866,272 @@ function handleDeepLink() {
 }
 
 init();
+
+/* ===================== 解压模式（多巴胺 · 模拟购物） ===================== */
+const CART_KEY = "hangi0_cart";
+const DOPA_KEY = "hangi0_dopamine";
+let dopaTimers = [];
+
+function parsePrice(text) {
+  const n = Number(String(text || "").replace(/[^\d.]/g, ""));
+  return isFinite(n) ? n : 0;
+}
+function fmtMoney(n) { return "¥" + Math.round(n).toLocaleString("zh-CN"); }
+function hashStr(s) { let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) | 0; } return h; }
+
+function getCart() { try { return JSON.parse(localStorage.getItem(CART_KEY) || "[]"); } catch { return []; } }
+function saveCart(c) { localStorage.setItem(CART_KEY, JSON.stringify(c)); updateCartCount(); }
+function cartCount() { return getCart().reduce((s, i) => s + (Number(i.qty) || 0), 0); }
+function cartTotal() { return getCart().reduce((s, i) => s + i.price * i.qty, 0); }
+function updateCartCount() {
+  const n = cartCount();
+  document.querySelectorAll("[data-cart-count]").forEach((el) => { el.textContent = n ? n : ""; });
+}
+
+function isDopamine() { return document.body.classList.contains("dopamine-on"); }
+function setDopamine(on) {
+  document.body.classList.toggle("dopamine-on", on);
+  localStorage.setItem(DOPA_KEY, on ? "1" : "0");
+  updateCartCount();
+}
+
+function addToCart(product, qty = 1) {
+  if (!product) return;
+  const cart = getCart();
+  const ex = cart.find((i) => i.id === product.id);
+  if (ex) ex.qty += qty;
+  else cart.push({ id: product.id, name: product.name, priceText: product.price || "", price: parsePrice(product.price), image: getCoverImage(product), qty });
+  saveCart(cart);
+  const btn = document.querySelector(".cart-btn");
+  if (btn) { btn.classList.remove("bump"); void btn.offsetWidth; btn.classList.add("bump"); }
+  showToast(`已加入购物车 · ${product.name}`);
+}
+function buyNow(product) { addToCart(product, 1); openCheckout(); }
+
+function changeQty(id, delta) {
+  const cart = getCart();
+  const it = cart.find((i) => i.id === id);
+  if (!it) return;
+  it.qty += delta;
+  if (it.qty <= 0) saveCart(cart.filter((i) => i.id !== id));
+  else saveCart(cart);
+  renderCart();
+}
+function removeFromCart(id) { saveCart(getCart().filter((i) => i.id !== id)); renderCart(); }
+
+function renderCart() {
+  const host = document.querySelector("[data-cart-content]");
+  if (!host) return;
+  const cart = getCart();
+  if (!cart.length) {
+    host.innerHTML = `<p class="cart-empty">购物车是空的，去挑几件喜欢的加进来吧 🛍️</p>`;
+    return;
+  }
+  host.innerHTML = `
+    <div class="cart-items">
+      ${cart.map((i) => `
+        <div class="cart-item">
+          <img src="${esc(i.image)}" alt="${esc(i.name)}">
+          <div class="ci-info">
+            <div class="ci-name">${esc(i.name)}</div>
+            <div class="ci-price">${esc(i.priceText || fmtMoney(i.price))}</div>
+            <div class="qty">
+              <button type="button" data-qty-minus="${esc(i.id)}" aria-label="减少">−</button>
+              <span>${i.qty}</span>
+              <button type="button" data-qty-plus="${esc(i.id)}" aria-label="增加">＋</button>
+              <button class="ci-remove" type="button" data-remove="${esc(i.id)}">删除</button>
+            </div>
+          </div>
+        </div>`).join("")}
+    </div>
+    <div class="cart-foot">
+      <div><small style="color:var(--ink-soft)">合计（模拟）</small><div class="cart-total-num">${fmtMoney(cartTotal())}</div></div>
+      <button class="btn solid" type="button" data-checkout-start>去结算 →</button>
+    </div>`;
+  host.querySelectorAll("[data-qty-minus]").forEach((b) => b.addEventListener("click", () => changeQty(b.dataset.qtyMinus, -1)));
+  host.querySelectorAll("[data-qty-plus]").forEach((b) => b.addEventListener("click", () => changeQty(b.dataset.qtyPlus, 1)));
+  host.querySelectorAll("[data-remove]").forEach((b) => b.addEventListener("click", () => removeFromCart(b.dataset.remove)));
+  host.querySelector("[data-checkout-start]")?.addEventListener("click", () => { document.querySelector("[data-cart-dialog]")?.close(); openCheckout(); });
+}
+
+function openCart() {
+  renderCart();
+  const d = document.querySelector("[data-cart-dialog]");
+  if (d && !d.open) d.showModal();
+}
+
+function openCheckout() {
+  if (!getCart().length) { showToast("购物车是空的，先加点东西吧"); return; }
+  const d = document.querySelector("[data-checkout-dialog]");
+  const totalEl = document.querySelector("[data-checkout-total]");
+  if (totalEl) totalEl.textContent = "应付（模拟）：" + fmtMoney(cartTotal());
+  try {
+    const saved = JSON.parse(localStorage.getItem("hangi0_address") || "null");
+    const f = document.querySelector("[data-checkout-form]");
+    if (saved && f) { f.name.value = saved.name || ""; f.phone.value = saved.phone || ""; f.address.value = saved.address || ""; }
+  } catch {}
+  if (d && !d.open) d.showModal();
+}
+
+function fmtTime(d) {
+  const p = (n) => String(n).padStart(2, "0");
+  return `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+/* 模拟支付：黑金卡 → 支付中 → 支付成功 → 进入物流 */
+function openPayment(order, amount) {
+  const d = document.querySelector("[data-payment-dialog]");
+  const host = document.querySelector("[data-payment-content]");
+  if (!d || !host) return;
+  clearDopaTimers();
+  host.innerHTML = `
+    <p class="idx" style="text-align:center">◦ 收银台 / PAYMENT</p>
+    <div class="pay-amount">${fmtMoney(amount)}</div>
+    <p class="pay-sub">HangI0 官方旗舰店 · 模拟支付，不会扣费</p>
+    <div class="pay-method-row"><span class="pay-mini-card"></span>招商银行黑金信用卡 **** 8888</div>
+    <button class="btn solid pay-confirm-btn" type="button" data-pay-confirm>确认支付 ${fmtMoney(amount)}</button>
+    <p class="dopamine-mini">模拟支付，不会从任何银行卡扣款。</p>`;
+  if (!d.open) d.showModal();
+  host.querySelector("[data-pay-confirm]")?.addEventListener("click", () => {
+    host.innerHTML = `<div class="pay-spinner"></div><p class="pay-processing">正在安全支付中…</p><p class="pay-sub">招商银行黑金信用卡 **** 8888</p>`;
+    dopaTimers.push(setTimeout(() => {
+      host.innerHTML = `<div class="pay-success-icon">✓</div><h3 style="text-align:center;font-family:var(--font-display);font-weight:400">支付成功</h3><p class="pay-sub">正在为你生成订单…</p>`;
+      dopaTimers.push(setTimeout(() => { d.close(); runTracking(order); }, 1000));
+    }, 1600));
+  });
+}
+
+/* 真实感物流：带时间/地点/快递员的时间线 + 签收短信通知 */
+function runTracking(order) {
+  const d = document.querySelector("[data-tracking-dialog]");
+  const host = document.querySelector("[data-tracking-content]");
+  const closeBtn = document.querySelector("[data-tracking-close]");
+  if (!d || !host) return;
+  clearDopaTimers();
+  const cart = getCart();
+  const total = cartTotal();
+  const count = cartCount();
+  const thumb = cart[0]?.image || "";
+  const trackNo = "SF" + String(Math.abs(hashStr(order.address + order.name + total)) % 1e12).padStart(12, "0");
+  const now = new Date();
+  const mk = (min) => new Date(now.getTime() - min * 60000);
+  const steps = [
+    { t: mk(372), label: "您已成功下单，等待商家发货" },
+    { t: mk(340), label: "【HangI0 官方仓】您的商品已出库" },
+    { t: mk(305), label: "快件已被 顺丰速运 揽收，运单号 " + trackNo },
+    { t: mk(188), label: "快件已到达【杭州转运中心】" },
+    { t: mk(120), label: "快件已从【杭州转运中心】发出，下一站 目的地城市" },
+    { t: mk(52), label: "快件已到达【目的地派送点】" },
+    { t: mk(16), label: "派送中 · 快递员 王师傅（138****6666）正在为您派送" },
+    { t: now, label: "【已签收】您的快件已妥投，签收人：本人" }
+  ];
+  if (closeBtn) closeBtn.hidden = true;
+  host.innerHTML = `
+    <div class="track-order-head">
+      ${thumb ? `<img src="${esc(thumb)}" alt="">` : ""}
+      <div>
+        <div class="track-order-title">订单已提交 · 商家备货中</div>
+        <div class="track-order-meta">共 ${count} 件 · 实付 ${fmtMoney(total)} · 黑金卡 ****8888</div>
+      </div>
+    </div>
+    <p class="tracking-sub">${esc(order.name)} ${esc(order.phone)}<br>${esc(order.address)}</p>
+    <ul class="track-steps">
+      ${steps.map((s, i) => `<li class="track-step" data-step="${i}"><span class="track-dot"></span><div><div class="track-label">${esc(s.label)}</div><div class="track-time">${fmtTime(s.t)}</div></div></li>`).join("")}
+    </ul>`;
+  if (!d.open) d.showModal();
+  const stepEls = host.querySelectorAll(".track-step");
+  let idx = 0;
+  const advance = () => {
+    if (idx > 0) stepEls[idx - 1]?.classList.remove("active");
+    if (idx < stepEls.length) {
+      stepEls[idx].classList.add("done", "active");
+      stepEls[idx].scrollIntoView?.({ block: "nearest" });
+      idx++;
+      dopaTimers.push(setTimeout(advance, idx <= 3 ? 900 : idx <= 6 ? 1500 : 2200));
+    } else {
+      deliverNotify(order, host, closeBtn, now);
+    }
+  };
+  advance();
+}
+
+function deliverNotify(order, host, closeBtn, now) {
+  host.insertAdjacentHTML("afterbegin", `
+    <div class="sms-card">
+      <div class="sms-head">📩 快递签收通知 · HangI0 速递</div>
+      <div class="sms-body">【HangI0速递】您尾号 8888 的包裹已于 ${fmtTime(now)} 妥投至【${esc(order.address)}】，签收人：本人。感谢您的信任，期待再次为您服务！<br>
+        <span class="sms-note">（温馨提示：本次为解压模拟，你不会真的收到这个包裹 🫶）</span></div>
+    </div>`);
+  const btn = document.createElement("button");
+  btn.className = "btn solid";
+  btn.type = "button";
+  btn.textContent = "继续逛逛 →";
+  btn.addEventListener("click", () => document.querySelector("[data-tracking-dialog]")?.close());
+  host.appendChild(btn);
+  if (closeBtn) closeBtn.hidden = false;
+  saveCart([]); // 订单完成，清空购物车
+}
+
+function clearDopaTimers() { dopaTimers.forEach(clearTimeout); dopaTimers = []; }
+
+function fireConfetti() {
+  // 物流弹窗是顶层(top-layer)元素，普通彩带层会被它盖住 —— 弹窗打开时把彩带挂进弹窗
+  const dlg = document.querySelector("[data-tracking-dialog]");
+  const layer = (dlg && dlg.open) ? dlg : document.querySelector("[data-confetti]");
+  if (!layer || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const colors = ["#ff5a8a", "#ffb020", "#3fa45a", "#3f8fe0", "#b0553a", "#e23b6d"];
+  for (let i = 0; i < 90; i++) {
+    const p = document.createElement("span");
+    p.className = "confetti-piece";
+    p.style.left = (Math.random() * 100) + "vw";
+    p.style.background = colors[i % colors.length];
+    const dur = 2.2 + Math.random() * 1.8;
+    p.style.animationDuration = dur + "s";
+    p.style.animationDelay = (Math.random() * 0.4) + "s";
+    layer.appendChild(p);
+    setTimeout(() => p.remove(), (dur + 0.6) * 1000);
+  }
+}
+
+function setupDopamine() {
+  updateCartCount();
+  if (localStorage.getItem(DOPA_KEY) === "1") setDopamine(true);
+
+  document.querySelector("[data-dopamine-enter]")?.addEventListener("click", () => {
+    const intro = document.querySelector("[data-dopamine-intro]");
+    if (intro && !intro.open) intro.showModal();
+  });
+  document.querySelector("[data-dopamine-confirm]")?.addEventListener("click", () => {
+    document.querySelector("[data-dopamine-intro]")?.close();
+    setDopamine(true);
+    showToast("已进入解压模式 🎈 尽情放松");
+  });
+  document.querySelector("[data-dopamine-cancel]")?.addEventListener("click", () => document.querySelector("[data-dopamine-intro]")?.close());
+  document.querySelector("[data-dopamine-intro]")?.addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+
+  document.querySelector("[data-dopamine-exit]")?.addEventListener("click", () => {
+    setDopamine(false);
+    clearDopaTimers();
+    ["[data-cart-dialog]", "[data-checkout-dialog]", "[data-payment-dialog]", "[data-tracking-dialog]"].forEach((s) => { const d = document.querySelector(s); if (d?.open) d.close(); });
+    showToast("已退出解压模式");
+  });
+
+  document.querySelectorAll("[data-cart-open]").forEach((b) => b.addEventListener("click", openCart));
+  document.querySelector("[data-cart-close]")?.addEventListener("click", () => document.querySelector("[data-cart-dialog]")?.close());
+  document.querySelector("[data-cart-dialog]")?.addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+
+  document.querySelector("[data-checkout-close]")?.addEventListener("click", () => document.querySelector("[data-checkout-dialog]")?.close());
+  document.querySelector("[data-checkout-dialog]")?.addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+  document.querySelector("[data-checkout-form]")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const order = { name: String(fd.get("name") || "").trim(), phone: String(fd.get("phone") || "").trim(), address: String(fd.get("address") || "").trim() };
+    if (!order.name || !order.phone || !order.address) { showToast("请把收货信息填完整"); return; }
+    localStorage.setItem("hangi0_address", JSON.stringify(order));
+    const amount = cartTotal();
+    document.querySelector("[data-checkout-dialog]")?.close();
+    openPayment(order, amount);
+  });
+
+  document.querySelector("[data-tracking-close]")?.addEventListener("click", () => document.querySelector("[data-tracking-dialog]")?.close());
+}
