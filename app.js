@@ -225,7 +225,7 @@ function getInventory(p) {
 }
 function totalStock(p) { return getInventory(p).reduce((s, i) => s + (Number(i.stock) || 0), 0); }
 function categoryLabel(c) {
-  return ({ dress: "连衣裙", outerwear: "外套", daily: "上衣", bottom: "下装", set: "套装" }[c] || "精选");
+  return ({ dress: "连衣裙", outerwear: "外套", daily: "上衣", bottom: "下装", set: "套装", other: "其他" }[c] || "精选");
 }
 function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }

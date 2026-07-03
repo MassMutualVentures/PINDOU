@@ -539,10 +539,21 @@ async function renderOutfitList() {
 function bindForms() {
   document.querySelector("[data-login-form]")?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (!client) { setNote("演示模式不需要登录。配置 Supabase 后启用真实登录。", authNote); return; }
+    if (!client) { setNote("演示模式无需登录。", authNote); return; }
     const fd = new FormData(e.currentTarget);
+    setNote("正在登录...", authNote);
     const { error } = await client.auth.signInWithPassword({ email: fd.get("email"), password: fd.get("password") });
-    setNote(error ? `登录失败：${error.message}` : "已登录，可以管理数据。", authNote);
+    if (error) { setNote(`登录失败：${error.message}`, authNote); return; }
+    setNote("已登录。", authNote);
+    setAuthUI(true);
+    await loadAllAdminData();
+  });
+
+  document.querySelector("[data-logout]")?.addEventListener("click", async () => {
+    if (client) await client.auth.signOut();
+    adminDataLoaded = false;
+    setAuthUI(false);
+    setNote("已退出登录。", authNote);
   });
 
   document.querySelector("[data-product-form]")?.addEventListener("submit", async (e) => {
@@ -584,17 +595,54 @@ function bindForms() {
 }
 
 /* ---------- 启动 ---------- */
-async function init() {
-  client = initSupabase();
-  if (!client) setNote("当前为本机演示模式：改动只保存在这台电脑的浏览器里。", authNote);
-  else {
-    const { data } = await client.auth.getSession();
-    setNote(data.session ? "已登录，可以管理数据。" : "请先登录 Supabase 店主账号。", authNote);
-  }
-  bindForms();
+/* 登录门：未登录只显示登录框，隐藏所有管理面板 */
+function setAuthUI(loggedIn) {
+  document.querySelectorAll("[data-admin-gate]").forEach((el) => { el.hidden = !loggedIn; });
+  const loginForm = document.querySelector("[data-login-form]");
+  const loggedInBox = document.querySelector("[data-logged-in]");
+  if (loginForm) loginForm.hidden = loggedIn;
+  if (loggedInBox) loggedInBox.hidden = !loggedIn;
+  window.lucide?.createIcons();
+}
+
+let adminDataLoaded = false;
+async function loadAllAdminData() {
+  if (adminDataLoaded) return;
+  adminDataLoaded = true;
   await fillSettingsForm();
   await renderProductList();
   await renderOutfitList();
+  window.lucide?.createIcons();
+}
+
+async function init() {
+  client = initSupabase();
+  bindForms();
+
+  if (!client) {
+    // 未配置 Supabase 的演示模式：无真实登录后端，直接显示（仅本机）
+    setNote("演示模式（未配置 Supabase）：无需登录，改动仅存本机。", authNote);
+    setAuthUI(true);
+    await loadAllAdminData();
+    window.lucide?.createIcons();
+    return;
+  }
+
+  const { data } = await client.auth.getSession();
+  if (data.session) {
+    setNote("已登录。", authNote);
+    setAuthUI(true);
+    await loadAllAdminData();
+  } else {
+    setNote("请先登录后查看和管理店铺内容。", authNote);
+    setAuthUI(false);
+  }
+
+  client.auth.onAuthStateChange((_event, session) => {
+    if (session) { setAuthUI(true); loadAllAdminData(); }
+    else { adminDataLoaded = false; setAuthUI(false); }
+  });
+
   window.lucide?.createIcons();
 }
 init();

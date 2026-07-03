@@ -9,7 +9,7 @@
 create table if not exists public.products (
   id uuid primary key default gen_random_uuid(),
   name text not null,
-  category text not null check (category in ('dress', 'outerwear', 'daily', 'bottom', 'set')),
+  category text not null check (category in ('dress', 'outerwear', 'daily', 'bottom', 'set', 'other')),
   price text not null,
   tag text,
   description text,
@@ -32,7 +32,7 @@ alter table public.products add column if not exists total_stock integer not nul
 alter table public.products drop constraint if exists products_category_check;
 alter table public.products
 add constraint products_category_check
-check (category in ('dress', 'outerwear', 'daily', 'bottom', 'set'));
+check (category in ('dress', 'outerwear', 'daily', 'bottom', 'set', 'other'));
 
 alter table public.products enable row level security;
 
