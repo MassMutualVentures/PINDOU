@@ -2246,3 +2246,17 @@ a {
 
 /* 修复：admin.css 的按钮 display 规则会盖过 UA 的 [hidden]，导致隐藏元素仍显示 */
 [hidden] { display: none !important; }
+
+/* 颜色输入：可视化色块 + 名称 */
+.color-field { margin-bottom: 4px; }
+.color-rows { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+.color-row { display: flex; align-items: center; gap: 8px; }
+.color-swatch-input { width: 46px; height: 40px; padding: 2px; border: 1px solid rgba(18,18,15,0.2); border-radius: 8px; background: #fff; cursor: pointer; flex: none; }
+.color-name-input { flex: 1; min-height: 40px; padding: 0 12px; border: 1px solid rgba(18,18,15,0.2); border-radius: 8px; font-family: inherit; font-size: 0.95rem; background: #fff; }
+.color-name-input:focus { outline: none; border-color: #12120f; }
+.color-remove { width: 34px; height: 34px; border-radius: 999px; border: 1px solid rgba(18,18,15,0.2); background: #fff; font-size: 0.85rem; cursor: pointer; flex: none; }
+.color-remove:hover { background: #12120f; color: #fff; border-color: #12120f; }
+
+/* 覆盖 .admin-form input 的 width:100%，让色块保持小方块、名称框自适应 */
+.color-rows .color-swatch-input { width: 46px; height: 40px; flex: none; padding: 2px; }
+.color-rows .color-name-input { flex: 1; width: auto; min-width: 0; }

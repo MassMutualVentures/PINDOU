@@ -2018,8 +2018,9 @@ body.dopamine-on .dopamine-fab { display: none; }
 .pay-card-chip { width: 34px; height: 24px; border-radius: 5px; background: linear-gradient(135deg, #e8c976, #b0872f); }
 .pay-card-no { font-size: 1.24rem; letter-spacing: 0.14em; margin: 1rem 0 0.9rem; color: #f5e9cc; }
 .pay-card-bottom { display: flex; justify-content: space-between; font-size: 0.7rem; letter-spacing: 0.06em; color: #c9b483; }
-.co-foot { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 0.4rem; }
-.co-foot .btn.solid { flex: none; }
+.co-foot { display: flex; flex-direction: column; gap: 0.8rem; margin-top: 0.4rem; }
+.co-foot .checkout-total { text-align: right; }
+.co-foot .btn.solid { width: 100%; justify-content: center; }
 
 /* 支付弹窗 */
 .payment-dialog { width: min(400px, 92vw); padding: clamp(1.8rem, 5vw, 2.6rem); text-align: center; }
@@ -2049,3 +2050,114 @@ body.dopamine-on .dopamine-fab { display: none; }
 .sms-head { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; letter-spacing: 0.02em; color: var(--clay-deep); margin-bottom: 0.55rem; }
 .sms-body { font-size: 0.92rem; line-height: 1.75; }
 .sms-note { color: var(--ink-soft); font-size: 0.82rem; }
+
+/* =========================================================
+   尺码 / 颜色 选择
+   ========================================================= */
+.opt-group { margin: 0.4rem 0 1.2rem; }
+.opt-label {
+  font-size: 0.74rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-soft); margin-bottom: 0.6rem;
+}
+.opt-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.opt-chip {
+  min-width: 44px; padding: 0.5rem 0.9rem; border-radius: 8px;
+  border: 1px solid var(--line); background: var(--paper);
+  font-family: inherit; font-size: 0.9rem; color: var(--ink);
+  transition: border-color 0.25s var(--ease), background 0.25s var(--ease), color 0.25s var(--ease);
+}
+.opt-chip:hover:not([disabled]) { border-color: var(--ink); }
+.opt-chip.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.opt-chip[disabled] { opacity: 0.35; text-decoration: line-through; cursor: not-allowed; }
+
+.opt-swatches { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.opt-swatch {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 0.4rem 0.85rem 0.4rem 0.45rem; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--paper);
+  font-family: inherit; font-size: 0.86rem; color: var(--ink);
+  transition: border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+.opt-swatch .sw { width: 18px; height: 18px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, 0.14); flex: none; }
+.opt-swatch:hover { border-color: var(--ink); }
+.opt-swatch.active { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink) inset; }
+
+.ci-variant { font-size: 0.78rem; color: var(--ink-soft); margin-top: 2px; }
+
+/* 解压模式：底部留白（内容不被提醒条压住）+ 提醒条可收起 */
+body.dopamine-on { padding-bottom: 4.5rem; }
+.dopamine-bar .db-mini { display: none; background: none; padding: 0 0.2rem; color: inherit; font-size: 0.8rem; letter-spacing: 0.02em; }
+.dopamine-bar .db-toggle { background: rgba(255, 255, 255, 0.16); color: var(--cream-on-dark); font-size: 0.72rem; }
+.dopamine-bar .db-toggle:hover { background: rgba(255, 255, 255, 0.3); }
+.dopamine-bar.collapsed { padding-top: 0.45rem; padding-bottom: 0.45rem; }
+.dopamine-bar.collapsed .db-full,
+.dopamine-bar.collapsed .db-exit,
+.dopamine-bar.collapsed .db-toggle { display: none; }
+.dopamine-bar.collapsed .db-mini { display: inline; }
+
+/* 浮标（入口 + 联系）滚动后再出现，避免落地第一屏遮挡 hero 按钮 */
+.dopamine-fab, .fab {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(14px);
+  transition: opacity 0.35s var(--ease), transform 0.35s var(--ease), visibility 0.35s;
+}
+body.show-fabs .dopamine-fab,
+body.show-fabs .fab {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+/* Lookbook 不足 4 套穿搭时用等分网格，避免塌空 */
+.lookbook-grid.few { grid-template-columns: repeat(2, 1fr); grid-template-rows: none; }
+.lookbook-grid.few .lb { height: auto; aspect-ratio: 3 / 4; grid-row: auto; grid-column: auto; }
+
+/* 导航里的解压入口（桌面显示；手机端改在菜单里） */
+.dopa-nav { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
+.dopa-nav:hover { color: var(--clay); }
+@media (max-width: 860px) { .dopa-nav { display: none; } }
+
+/* 手机菜单里的解压入口（粉色胶囊，醒目） */
+.mobile-menu .mm-dopa {
+  align-self: flex-start;
+  margin-top: 0.7rem;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: #ff2e88;
+  padding: 0.75rem 1.2rem;
+  border-radius: 999px;
+}
+.mobile-menu .mm-dopa:hover { background: #e01a70; }
+
+/* 进入解压模式后隐藏入口（避免重复） */
+body.dopamine-on .dopa-nav, body.dopamine-on .mm-dopa { display: none; }
+
+/* 修复：全屏进入页是 dialog，关闭时必须隐藏（display:grid 会盖过默认隐藏，导致漏在页面底部） */
+.dopamine-intro-dialog:not([open]) { display: none; }
+
+/* 微信卡片：复制/打开微信 按钮行 + 引导 */
+.wechat-card-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 0.4rem; }
+.wechat-hint { font-size: 0.74rem; color: rgba(240, 233, 218, 0.6); margin-top: 0.5rem; line-height: 1.5; }
+
+/* ===== 复盘修缮：hero 排版 + 地图链接 ===== */
+/* 装饰性 SCROLL 竖字与按钮重叠，移除 */
+.hero-scroll { display: none !important; }
+/* 眉标：整段换行而不是内部断行（避免"2019"孤行） */
+.hero-kicker { flex-wrap: wrap; gap: 0.3rem 0.8rem; }
+.hero-kicker span { white-space: nowrap; }
+/* 副标题：稍放宽 + 更优断行，减少"女/装"式断词 */
+.hero-sub { max-width: 38ch; text-wrap: pretty; }
+/* 地址导航链接 */
+.map-link {
+  display: inline-block;
+  margin-top: 0.45rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: var(--cream-on-dark);
+  border-bottom: 1px solid rgba(240, 233, 218, 0.4);
+  padding-bottom: 1px;
+}
+.map-link:hover { color: #fff; border-color: #fff; }

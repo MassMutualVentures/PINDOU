@@ -106,6 +106,50 @@ function productInventory(p) {
   if (typeof p.inventory === "string") { try { const x = JSON.parse(p.inventory); return Array.isArray(x) ? x : []; } catch { return []; } }
   return [];
 }
+function productColors(p) {
+  let c = p.colors;
+  if (typeof c === "string") { try { c = JSON.parse(c); } catch { c = []; } }
+  if (!Array.isArray(c)) return [];
+  return c.map((x) => (typeof x === "string" ? { name: x, hex: "" } : { name: x?.name || "", hex: x?.hex || "" })).filter((x) => x.name);
+}
+/* 颜色：可视化色块 + 名称，无需填十六进制 */
+function makeColorRow(name = "", hex = "#cccccc") {
+  const row = document.createElement("div");
+  row.className = "color-row";
+  const swatch = document.createElement("input");
+  swatch.type = "color";
+  swatch.className = "color-swatch-input";
+  swatch.value = /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : "#cccccc";
+  swatch.title = "点这里选颜色";
+  const text = document.createElement("input");
+  text.type = "text";
+  text.className = "color-name-input";
+  text.placeholder = "颜色名称（如：黑色 / 藕粉 / 燕麦）";
+  text.value = name;
+  const rm = document.createElement("button");
+  rm.type = "button";
+  rm.className = "color-remove";
+  rm.textContent = "✕";
+  rm.title = "删除这个颜色";
+  rm.addEventListener("click", () => row.remove());
+  row.append(swatch, text, rm);
+  return row;
+}
+function addColorRow(name, hex) {
+  document.querySelector("[data-color-rows]")?.appendChild(makeColorRow(name, hex));
+}
+function readColorRows() {
+  return [...document.querySelectorAll("[data-color-rows] .color-row")].map((r) => ({
+    name: r.querySelector(".color-name-input").value.trim(),
+    hex: r.querySelector(".color-swatch-input").value
+  })).filter((c) => c.name);
+}
+function fillColorRows(colors) {
+  const host = document.querySelector("[data-color-rows]");
+  if (!host) return;
+  host.innerHTML = "";
+  colors.forEach((c) => host.appendChild(makeColorRow(c.name, c.hex)));
+}
 function outfitItems(o) {
   if (Array.isArray(o.items)) return o.items;
   if (typeof o.items === "string") { try { const x = JSON.parse(o.items); return Array.isArray(x) ? x : []; } catch { return []; } }
@@ -169,6 +213,7 @@ async function buildProduct(form, existing) {
     clothing_image_url: cover,
     inventory,
     total_stock: inventory.reduce((s, i) => s + i.stock, 0),
+    colors: readColorRows(),
     published: fd.get("published") === "on"
   };
 }
@@ -228,6 +273,7 @@ function fillProductForm(p) {
   form.elements.description.value = p.description || "";
   form.elements.cover_image_url.value = productClothingImage(p) || "";
   form.elements.model_image_urls.value = productModelImages(p).join("\n");
+  fillColorRows(productColors(p));
   const inv = {};
   productInventory(p).forEach((i) => { inv[i.size] = i.stock; });
   const map = { XS: "stock_xs", S: "stock_s", M: "stock_m", L: "stock_l", XL: "stock_xl", "均码": "stock_free" };
@@ -255,6 +301,7 @@ function resetProductForm() {
   editingProductId = null;
   form?.reset();
   if (form) form.elements.published.checked = true;
+  fillColorRows([]); // 清空颜色行（reset 不会清动态添加的行）
   document.querySelector("[data-product-edit-id]").value = "";
   document.querySelector("[data-product-form-title]").textContent = "添加新款";
   document.querySelector("[data-product-mode-label]").textContent = "发布";
@@ -570,6 +617,7 @@ function bindForms() {
     } catch (err) { setNote(`保存失败：${err.message}`); }
   });
   document.querySelector("[data-product-cancel]")?.addEventListener("click", resetProductForm);
+  document.querySelector("[data-add-color]")?.addEventListener("click", () => addColorRow());
 
   document.querySelector("[data-settings-form]")?.addEventListener("submit", async (e) => {
     e.preventDefault();

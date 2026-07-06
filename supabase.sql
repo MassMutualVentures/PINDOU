@@ -19,6 +19,7 @@ create table if not exists public.products (
   clothing_image_url text,
   inventory jsonb not null default '[]'::jsonb,
   total_stock integer not null default 0,
+  colors jsonb not null default '[]'::jsonb,
   published boolean not null default true,
   created_at timestamptz not null default now()
 );
@@ -28,6 +29,7 @@ alter table public.products add column if not exists clothing_image_url text;
 alter table public.products add column if not exists model_image_urls jsonb not null default '[]'::jsonb;
 alter table public.products add column if not exists inventory jsonb not null default '[]'::jsonb;
 alter table public.products add column if not exists total_stock integer not null default 0;
+alter table public.products add column if not exists colors jsonb not null default '[]'::jsonb;
 
 alter table public.products drop constraint if exists products_category_check;
 alter table public.products

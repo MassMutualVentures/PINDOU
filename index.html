@@ -19,7 +19,7 @@
 
     <link rel="preconnect" href="https://images.unsplash.com" />
     <link rel="preconnect" href="https://xeezfiazvuqjtjsghaqs.supabase.co" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=9" />
 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="./config.js"></script>
@@ -184,14 +184,18 @@
             <div class="wechat-card-info">
               <span>店主微信号</span>
               <strong data-wechat-id></strong>
-              <button class="mini-btn" type="button" data-copy-wechat>复制微信号</button>
+              <div class="wechat-card-btns">
+                <button class="mini-btn" type="button" data-copy-wechat>复制微信号</button>
+                <button class="mini-btn" type="button" data-open-wechat>打开微信</button>
+              </div>
+              <p class="wechat-hint">打开微信 → 加朋友 → 搜索框粘贴；或扫右侧二维码直接加。</p>
             </div>
             <img class="wechat-card-qr" data-wechat-qr alt="微信二维码" hidden />
           </div>
           <dl class="visit-meta">
             <div><dt>电话</dt><dd data-meta-phone>—</dd></div>
             <div><dt>微信</dt><dd data-meta-wechat>—</dd></div>
-            <div><dt>地址</dt><dd data-meta-address>—</dd></div>
+            <div><dt>地址</dt><dd data-meta-address>—</dd><a class="map-link" data-map-link target="_blank" rel="noopener" hidden>打开地图导航 →</a></div>
             <div><dt>营业</dt><dd data-meta-hours>—</dd></div>
           </dl>
         </div>
@@ -247,15 +251,12 @@
       </div>
     </dialog>
 
-    <!-- 解压模式：入口（未进入时显示） -->
-    <button class="dopamine-fab" type="button" data-dopamine-enter aria-label="进入解压空间">
-      <span class="dopa-dot" aria-hidden="true"></span>解压空间
-    </button>
-
-    <!-- 解压模式：常驻提醒条（进入后显示） -->
-    <div class="dopamine-bar dopamine-only" role="note">
-      <span>解压模式 · 纯模拟，不扣费、不会真实发货</span>
-      <button type="button" data-dopamine-exit>退出</button>
+    <!-- 解压模式：常驻提醒条（进入后显示，可收起） -->
+    <div class="dopamine-bar dopamine-only" role="note" data-dopamine-bar>
+      <span class="db-full">🎈 解压模式 · 纯模拟，不扣费、不会真实发货</span>
+      <button class="db-mini" type="button" data-dopamine-collapse>🎈 解压中</button>
+      <button class="db-exit" type="button" data-dopamine-exit>退出</button>
+      <button class="db-toggle" type="button" data-dopamine-collapse aria-label="收起提醒">收起</button>
     </div>
 
     <!-- 解压模式：全屏进入页 -->
@@ -326,7 +327,10 @@
       <div class="fab-wechat-pop" data-fab-pop hidden>
         <p>店主微信号</p>
         <strong data-fab-wechat-id></strong>
-        <button class="mini-btn" type="button" data-copy-wechat>复制微信号</button>
+        <div class="wechat-card-btns">
+          <button class="mini-btn" type="button" data-copy-wechat>复制</button>
+          <button class="mini-btn" type="button" data-open-wechat>打开微信</button>
+        </div>
         <img data-fab-wechat-qr alt="微信二维码" hidden />
       </div>
       <a class="fab-btn phone" data-fab-phone href="tel:" aria-label="电话联系店主">
@@ -346,6 +350,6 @@
       <span data-cursor-label></span>
     </div>
 
-    <script src="./app.js?v=trend-1"></script>
+    <script src="./app.js?v=trend-8"></script>
   </body>
 </html>

@@ -158,7 +158,8 @@ async function loadProducts() {
     const { data, error } = await supa
       .from("products").select("*").eq("published", true)
       .order("created_at", { ascending: false });
-    if (!error && data?.length) return data;
+    // 已接线上库：即使出错/为空也不回退演示假货，前台走友好空状态
+    return !error && Array.isArray(data) ? data : [];
   }
   const local = JSON.parse(localStorage.getItem("boutiqueProducts") || "[]");
   return dedupeById([...local, ...defaultProducts]).filter((p) => p.published !== false);
@@ -174,7 +175,8 @@ async function loadOutfits() {
     const { data, error } = await supa
       .from("outfits").select("*").eq("published", true)
       .order("sort", { ascending: true }).order("created_at", { ascending: false });
-    if (!error && data?.length) return data;
+    // 已接线上库：不回退演示穿搭；为空时前台隐藏整个板块
+    return !error && Array.isArray(data) ? data : [];
   }
   const local = JSON.parse(localStorage.getItem("boutiqueOutfits") || "[]");
   const merged = dedupeById([...local, ...defaultOutfits]).filter((o) => o.published !== false);
@@ -224,10 +226,22 @@ function getInventory(p) {
   return [];
 }
 function totalStock(p) { return getInventory(p).reduce((s, i) => s + (Number(i.stock) || 0), 0); }
+function getColors(p) {
+  let c = p.colors;
+  if (typeof c === "string") { try { c = JSON.parse(c); } catch { c = []; } }
+  if (!Array.isArray(c)) return [];
+  return c.map((x) => (typeof x === "string" ? { name: x, hex: "" } : { name: x?.name || "", hex: x?.hex || "" })).filter((x) => x.name);
+}
 function categoryLabel(c) {
   return ({ dress: "连衣裙", outerwear: "外套", daily: "上衣", bottom: "下装", set: "套装", other: "其他" }[c] || "精选");
 }
 function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
+/* 价格展示：店主只填了数字时自动补 ¥（如 388 → ¥388），已带符号/文字则原样 */
+function fmtPrice(t) {
+  t = String(t == null ? "" : t).trim();
+  if (!t) return "";
+  return /^[\d,.\s]+$/.test(t) ? "¥" + t.replace(/\s+/g, "") : t;
+}
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
 function getVisibleProducts() {
@@ -267,7 +281,7 @@ function renderFeature() {
         <p class="eyebrow">本周精选 · ${categoryLabel(featured.category)}</p>
         <h3>${esc(featured.name)}</h3>
         <p>${esc(featured.description || "本周店里最想推荐的一件，欢迎线上看款、到店试穿。")}</p>
-        <span class="feature-price">${esc(featured.price || "")}</span>
+        <span class="feature-price">${esc(fmtPrice(featured.price))}</span>
         <button class="btn solid" type="button" data-open="${esc(featured.id)}">查看细节</button>
       </div>
     </div>`;
@@ -286,7 +300,9 @@ function renderProducts() {
   if (countLabel) countLabel.textContent = `共 ${products.length} 款 · 全部为女装`;
 
   if (!products.length) {
-    grid.innerHTML = `<p class="form-note">没有找到符合条件的款式，换个分类或关键词试试。</p>`;
+    grid.innerHTML = `<p class="form-note">${state.products.length
+      ? "没有找到符合条件的款式，换个分类或关键词试试。"
+      : "新品正在整理上架，欢迎电话或微信联系店主抢先看。"}</p>`;
     return;
   }
 
@@ -316,7 +332,7 @@ function renderProducts() {
             <strong>${esc(p.name)}</strong>
             <small>${categoryLabel(p.category)} · ${meta}</small>
           </div>
-          <span class="pcard-price">${esc(p.price || "")}</span>
+          <span class="pcard-price">${esc(fmtPrice(p.price))}</span>
         </div>
         <button class="pcard-cart dopamine-only" type="button" data-add-cart="${esc(p.id)}">🛒 加入购物车</button>
       </article>`;
@@ -343,7 +359,10 @@ function renderProducts() {
   grid.querySelectorAll("[data-add-cart]").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      addToCart(state.products.find((p) => p.id === btn.dataset.addCart));
+      const p = state.products.find((x) => x.id === btn.dataset.addCart);
+      if (!p) return;
+      if (getInventory(p).length || getColors(p).length) openProduct(p.id); // 有规格：进详情选尺码/颜色
+      else addToCart(p, {}); // 无规格：直接加
     });
   });
   revealObserve(grid.querySelectorAll(".pcard"));
@@ -374,7 +393,7 @@ function openWishlist() {
               <img src="${esc(getCoverImage(p))}" alt="${esc(p.name)}" loading="lazy">
               <button class="wish-remove" type="button" data-wish-remove="${esc(p.id)}" aria-label="移出心愿单">✕</button>
             </div>
-            <div class="wish-info"><strong>${esc(p.name)}</strong><span>${esc(p.price || "")}</span></div>
+            <div class="wish-info"><strong>${esc(p.name)}</strong><span>${esc(fmtPrice(p.price))}</span></div>
           </article>`).join("")}
       </div>`;
     content.querySelectorAll("[data-wish-product]").forEach((card) => {
@@ -402,9 +421,13 @@ function renderLookbook() {
   const grid = document.querySelector("[data-lookbook-grid]");
   if (!grid) return;
   const outfits = state.outfits.slice(0, 4);
+  const section = document.querySelector(".lookbook");
+  if (section) section.hidden = !outfits.length; // 没有穿搭时隐藏整个板块，避免空标题
   if (!outfits.length) { grid.innerHTML = ""; return; }
+  const few = outfits.length < 4; // 不足 4 套用简单等分网格，避免塌空
+  grid.classList.toggle("few", few);
   grid.innerHTML = outfits.map((o, i) => {
-    const cls = i === 0 ? "lb lb-tall" : i === 3 ? "lb lb-wide" : "lb";
+    const cls = few ? "lb" : (i === 0 ? "lb lb-tall" : i === 3 ? "lb lb-wide" : "lb");
     return `
       <figure class="${cls}" data-outfit-id="${esc(o.id)}" tabindex="0" role="button"
         data-cursor-hover aria-label="查看整套穿搭：${esc(o.title)}">
@@ -519,18 +542,23 @@ function openProduct(productId) {
   const modelImage = modelImages[0] || getCoverImage(product);
   const clothingImage = getClothingImage(product);
   const allInventory = getInventory(product);
-  const inventory = allInventory.filter((i) => Number(i.stock) > 0);
-  const soldOut = allInventory.length > 0 && inventory.length === 0;
+  const inStock = allInventory.filter((i) => Number(i.stock) > 0);
+  const soldOut = allInventory.length > 0 && inStock.length === 0;
+  const colors = getColors(product);
   const gallery = modelImages.length
     ? modelImages.map((image, i) =>
         `<button class="tryon-thumb${i === 0 ? " active" : ""}" type="button" data-view-image="${esc(image)}" aria-label="查看第 ${i + 1} 张上身图">
           <img src="${esc(image)}" alt="${esc(product.name)} 上身图 ${i + 1}" loading="lazy"></button>`).join("")
     : "";
-  const stockMarkup = inventory.length
-    ? `<div class="size-stock" aria-label="可选尺码">${inventory.map((i) => `<span>${esc(i.size)} <strong>${esc(i.stock)}</strong></span>`).join("")}</div>`
-    : soldOut
-      ? `<p class="stock-note soldout">该款暂时售罄，补货请咨询店主。</p>`
-      : `<p class="stock-note">库存请咨询店主确认。</p>`;
+  const sizeGroup = allInventory.length
+    ? `<div class="opt-group"><p class="opt-label">尺码${soldOut ? "（已售罄）" : ""}</p>
+        <div class="opt-chips" data-size-chips>${allInventory.map((i) => `<button type="button" class="opt-chip" data-size="${esc(i.size)}"${Number(i.stock) <= 0 ? " disabled" : ""}>${esc(i.size)}</button>`).join("")}</div></div>`
+    : "";
+  const colorGroup = colors.length
+    ? `<div class="opt-group"><p class="opt-label">颜色</p>
+        <div class="opt-swatches" data-color-swatches>${colors.map((c) => `<button type="button" class="opt-swatch" data-color="${esc(c.name)}" title="${esc(c.name)}"><span class="sw" style="background:${esc(c.hex || "#cbb9c4")}"></span>${esc(c.name)}</button>`).join("")}</div></div>`
+    : "";
+  const infoNote = (!allInventory.length && !colors.length) ? `<p class="stock-note">尺码 / 库存请咨询店主确认。</p>` : "";
 
   content.innerHTML = `
     <div class="dialog-layout">
@@ -546,11 +574,11 @@ function openProduct(productId) {
       <div class="dialog-copy">
         <p class="eyebrow">${categoryLabel(product.category)}</p>
         <h3>${esc(product.name)}</h3>
-        <strong class="price">${esc(product.price || "")}</strong>
+        <strong class="price">${esc(fmtPrice(product.price))}</strong>
         <p>${esc(product.description || "欢迎联系店主咨询尺码、库存和试穿安排。")}</p>
         ${gallery ? `<div class="tryon-gallery">${gallery}</div>` : ""}
         <div class="clothing-preview"><img src="${esc(clothingImage)}" alt="${esc(product.name)} 单品图"></div>
-        ${stockMarkup}
+        ${sizeGroup}${colorGroup}${infoNote}
         <div class="dialog-actions">
           <button class="btn solid dopamine-only" type="button" data-dlg-buy>立即购买</button>
           <button class="btn line dopamine-only" type="button" data-dlg-cart>加入购物车</button>
@@ -575,8 +603,30 @@ function openProduct(productId) {
   });
   content.querySelector("[data-product-consult]")?.addEventListener("click", () => consult("product", product));
   content.querySelector("[data-product-share]")?.addEventListener("click", () => openShare({ title: `${product.name}｜HangI0`, url: buildShareLink("product", product.id) }));
-  content.querySelector("[data-dlg-cart]")?.addEventListener("click", () => addToCart(product));
-  content.querySelector("[data-dlg-buy]")?.addEventListener("click", () => { dialog.close(); buyNow(product); });
+  // 尺码 / 颜色 选择
+  let selSize = null, selColor = null;
+  const sizeChips = [...content.querySelectorAll("[data-size]")];
+  const colorSwatches = [...content.querySelectorAll("[data-color]")];
+  const enabledSizes = sizeChips.filter((b) => !b.disabled);
+  if (enabledSizes.length === 1) { enabledSizes[0].classList.add("active"); selSize = enabledSizes[0].dataset.size; }
+  if (colorSwatches.length === 1) { colorSwatches[0].classList.add("active"); selColor = colorSwatches[0].dataset.color; }
+  sizeChips.forEach((b) => b.addEventListener("click", () => {
+    if (b.disabled) return;
+    sizeChips.forEach((x) => x.classList.remove("active"));
+    b.classList.add("active"); selSize = b.dataset.size;
+  }));
+  colorSwatches.forEach((b) => b.addEventListener("click", () => {
+    colorSwatches.forEach((x) => x.classList.remove("active"));
+    b.classList.add("active"); selColor = b.dataset.color;
+  }));
+  const pickVariant = () => {
+    if (soldOut) { showToast("该款暂时售罄"); return null; }
+    if (allInventory.length && !selSize) { showToast("请先选择尺码"); return null; }
+    if (colors.length && !selColor) { showToast("请先选择颜色"); return null; }
+    return { size: selSize || "", color: selColor || "" };
+  };
+  content.querySelector("[data-dlg-cart]")?.addEventListener("click", () => { const v = pickVariant(); if (v) addToCart(product, v); });
+  content.querySelector("[data-dlg-buy]")?.addEventListener("click", () => { const v = pickVariant(); if (!v) return; dialog.close(); buyNow(product, v); });
 }
 
 /* ---------- 店铺设置注入 ---------- */
@@ -613,6 +663,16 @@ function applySettings() {
   document.querySelectorAll("[data-wechat-qr], [data-fab-wechat-qr]").forEach((img) => {
     if (s.wechat_qr) { img.src = s.wechat_qr; img.hidden = false; } else { img.hidden = true; }
   });
+  // 地址 → 高德地图导航（手机上会转到 App）
+  const mapA = document.querySelector("[data-map-link]");
+  if (mapA) {
+    if (s.address) {
+      mapA.href = "https://uri.amap.com/search?keyword=" + encodeURIComponent(s.address);
+      mapA.hidden = false;
+    } else {
+      mapA.hidden = true;
+    }
+  }
 }
 
 function copyText(text, okMsg) {
@@ -640,6 +700,17 @@ function copyWechat() {
   const w = state.settings.wechat || "";
   if (!w) return;
   copyText(w, "已复制微信号：" + w);
+}
+
+/* 打开微信：先复制微信号，再尝试唤起微信 App（手机端有效；
+   桌面/未装微信无反应，也不影响。微信不允许网页自动搜索号，只能到店里粘贴） */
+function openWechatApp() {
+  const w = state.settings.wechat || "";
+  if (w) copyText(w, "微信号已复制 · 打开微信后「加朋友」粘贴搜索即可");
+  // 仅在触屏设备（手机/平板）尝试直接唤起微信；桌面不尝试，避免弹出报错
+  if (window.matchMedia("(pointer: coarse)").matches) {
+    try { window.location.href = "weixin://"; } catch {}
+  }
 }
 
 function revealWechatCard() {
@@ -777,7 +848,11 @@ function applyFilter(filter) {
 /* ---------- 事件 ---------- */
 function bindEvents() {
   const header = document.querySelector("[data-header]");
-  const onScroll = () => { if (header) header.classList.toggle("is-scrolled", window.scrollY > 40); };
+  const onScroll = () => {
+    if (header) header.classList.toggle("is-scrolled", window.scrollY > 40);
+    // 浮标滚动后再出现，避免落地第一屏遮挡 hero 按钮
+    document.body.classList.toggle("show-fabs", window.scrollY > 220);
+  };
   onScroll();
   window.addEventListener("scroll", onScroll, { passive: true });
 
@@ -828,6 +903,7 @@ function bindEvents() {
   // 联系方式
   document.querySelector("[data-visit-wechat]")?.addEventListener("click", openWechat);
   document.querySelectorAll("[data-copy-wechat]").forEach((b) => b.addEventListener("click", copyWechat));
+  document.querySelectorAll("[data-open-wechat]").forEach((b) => b.addEventListener("click", openWechatApp));
   const fabPop = document.querySelector("[data-fab-pop]");
   document.querySelector("[data-fab-wechat]")?.addEventListener("click", () => { if (fabPop) fabPop.hidden = !fabPop.hidden; });
   document.addEventListener("click", (e) => {
@@ -867,7 +943,11 @@ function handleDeepLink() {
 
 init();
 
-/* ===================== 解压模式（多巴胺 · 模拟购物） ===================== */
+/* ===================== 解压模式（多巴胺 · 模拟购物） =====================
+   总开关：官网门面上已下架（false）。整块代码保留，如需拆成独立营销页
+   或重新启用，把下面改成 true 即可。 */
+const DOPAMINE_ENABLED = false;
+
 const CART_KEY = "hangi0_cart";
 const DOPA_KEY = "hangi0_dopamine";
 let dopaTimers = [];
@@ -879,7 +959,12 @@ function parsePrice(text) {
 function fmtMoney(n) { return "¥" + Math.round(n).toLocaleString("zh-CN"); }
 function hashStr(s) { let h = 0; for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) | 0; } return h; }
 
-function getCart() { try { return JSON.parse(localStorage.getItem(CART_KEY) || "[]"); } catch { return []; } }
+function getCart() {
+  try {
+    const c = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+    return c.map((i) => ({ ...i, lineId: i.lineId || `${i.id}|${i.size || ""}|${i.color || ""}` }));
+  } catch { return []; }
+}
 function saveCart(c) { localStorage.setItem(CART_KEY, JSON.stringify(c)); updateCartCount(); }
 function cartCount() { return getCart().reduce((s, i) => s + (Number(i.qty) || 0), 0); }
 function cartTotal() { return getCart().reduce((s, i) => s + i.price * i.qty, 0); }
@@ -895,29 +980,34 @@ function setDopamine(on) {
   updateCartCount();
 }
 
-function addToCart(product, qty = 1) {
+function addToCart(product, opts = {}) {
   if (!product) return;
+  const size = opts.size || "";
+  const color = opts.color || "";
+  const qty = opts.qty || 1;
+  const lineId = `${product.id}|${size}|${color}`;
   const cart = getCart();
-  const ex = cart.find((i) => i.id === product.id);
+  const ex = cart.find((i) => i.lineId === lineId);
   if (ex) ex.qty += qty;
-  else cart.push({ id: product.id, name: product.name, priceText: product.price || "", price: parsePrice(product.price), image: getCoverImage(product), qty });
+  else cart.push({ lineId, id: product.id, name: product.name, priceText: product.price || "", price: parsePrice(product.price), image: getCoverImage(product), size, color, qty });
   saveCart(cart);
   const btn = document.querySelector(".cart-btn");
   if (btn) { btn.classList.remove("bump"); void btn.offsetWidth; btn.classList.add("bump"); }
-  showToast(`已加入购物车 · ${product.name}`);
+  const variant = [size, color].filter(Boolean).join(" · ");
+  showToast(`已加入购物车 · ${product.name}${variant ? "（" + variant + "）" : ""}`);
 }
-function buyNow(product) { addToCart(product, 1); openCheckout(); }
+function buyNow(product, opts = {}) { addToCart(product, { ...opts, qty: 1 }); openCheckout(); }
 
-function changeQty(id, delta) {
+function changeQty(lineId, delta) {
   const cart = getCart();
-  const it = cart.find((i) => i.id === id);
+  const it = cart.find((i) => i.lineId === lineId);
   if (!it) return;
   it.qty += delta;
-  if (it.qty <= 0) saveCart(cart.filter((i) => i.id !== id));
+  if (it.qty <= 0) saveCart(cart.filter((i) => i.lineId !== lineId));
   else saveCart(cart);
   renderCart();
 }
-function removeFromCart(id) { saveCart(getCart().filter((i) => i.id !== id)); renderCart(); }
+function removeFromCart(lineId) { saveCart(getCart().filter((i) => i.lineId !== lineId)); renderCart(); }
 
 function renderCart() {
   const host = document.querySelector("[data-cart-content]");
@@ -934,12 +1024,13 @@ function renderCart() {
           <img src="${esc(i.image)}" alt="${esc(i.name)}">
           <div class="ci-info">
             <div class="ci-name">${esc(i.name)}</div>
-            <div class="ci-price">${esc(i.priceText || fmtMoney(i.price))}</div>
+            ${(i.size || i.color) ? `<div class="ci-variant">${[i.size ? "尺码 " + esc(i.size) : "", i.color ? "颜色 " + esc(i.color) : ""].filter(Boolean).join(" · ")}</div>` : ""}
+            <div class="ci-price">${esc(fmtPrice(i.priceText) || fmtMoney(i.price))}</div>
             <div class="qty">
-              <button type="button" data-qty-minus="${esc(i.id)}" aria-label="减少">−</button>
+              <button type="button" data-qty-minus="${esc(i.lineId)}" aria-label="减少">−</button>
               <span>${i.qty}</span>
-              <button type="button" data-qty-plus="${esc(i.id)}" aria-label="增加">＋</button>
-              <button class="ci-remove" type="button" data-remove="${esc(i.id)}">删除</button>
+              <button type="button" data-qty-plus="${esc(i.lineId)}" aria-label="增加">＋</button>
+              <button class="ci-remove" type="button" data-remove="${esc(i.lineId)}">删除</button>
             </div>
           </div>
         </div>`).join("")}
@@ -1094,13 +1185,20 @@ function fireConfetti() {
 }
 
 function setupDopamine() {
+  if (!DOPAMINE_ENABLED) {
+    // 门面已下架：确保关闭并清掉可能残留的进入状态
+    document.body.classList.remove("dopamine-on");
+    localStorage.removeItem(DOPA_KEY);
+    return;
+  }
   updateCartCount();
   if (localStorage.getItem(DOPA_KEY) === "1") setDopamine(true);
 
-  document.querySelector("[data-dopamine-enter]")?.addEventListener("click", () => {
+  document.querySelectorAll("[data-dopamine-enter]").forEach((b) => b.addEventListener("click", () => {
+    document.querySelector("[data-mobile-menu]")?.classList.remove("open");
     const intro = document.querySelector("[data-dopamine-intro]");
     if (intro && !intro.open) intro.showModal();
-  });
+  }));
   document.querySelector("[data-dopamine-confirm]")?.addEventListener("click", () => {
     document.querySelector("[data-dopamine-intro]")?.close();
     setDopamine(true);
@@ -1108,6 +1206,10 @@ function setupDopamine() {
   });
   document.querySelector("[data-dopamine-cancel]")?.addEventListener("click", () => document.querySelector("[data-dopamine-intro]")?.close());
   document.querySelector("[data-dopamine-intro]")?.addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+
+  document.querySelectorAll("[data-dopamine-collapse]").forEach((b) => b.addEventListener("click", () => {
+    document.querySelector("[data-dopamine-bar]")?.classList.toggle("collapsed");
+  }));
 
   document.querySelector("[data-dopamine-exit]")?.addEventListener("click", () => {
     setDopamine(false);
